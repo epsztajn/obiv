@@ -1,0 +1,2015 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Wirtualny asystent</title>
+  <script src="js/theme-init.js"></script>
+  <link rel="stylesheet" href="css/theme.css" />
+  <style>
+    :root {
+      --bg-color: #f4f6f9;
+      --text-main: #1a1a1a;
+      --text-muted: #6b7280;
+      --bubble-bg: #ffffff;
+      --accent-color: #cd291c;
+      --blue-btn: #0052a5;
+      --primary-blue: #1a56db;
+      --asst-suggestion-border: #2164e8;
+      --asst-suggestion-text: #2164e8;
+      --asst-suggestion-active: #e3f2fd;
+      --asst-btn-secondary-bg: transparent;
+      --asst-field-border: #d1d5db;
+      --asst-send-idle: #e5e7eb;
+      --asst-send-active: #cd291c;
+      --asst-user-bubble-bg: #e3f2fd;
+      --asst-user-bubble-text: #1a1a1a;
+    }
+
+    :root[data-theme="dark"] {
+      --bg-color: #101317;
+      --text-main: #ffffff;
+      --text-muted: rgba(255, 255, 255, 0.7);
+      --bubble-bg: #1f2328;
+      --blue-btn: #4ba5ff;
+      --primary-blue: #4ba5ff;
+      --asst-suggestion-border: #4ba5ff;
+      --asst-suggestion-text: #4ba5ff;
+      --asst-suggestion-active: #1a2f4d;
+      --asst-btn-secondary-bg: transparent;
+      --asst-field-border: #4b5563;
+      --asst-send-idle: #2b3139;
+      --asst-send-active: #cd291c;
+      --asst-user-bubble-bg: #1a3a5c;
+      --asst-user-bubble-text: #ffffff;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      display: flex;
+      flex-direction: column;
+      position: fixed; 
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      width: 100%;
+      overflow: hidden;
+    }
+
+    /* --- Nagłówek --- */
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 20px;
+      padding-top: max(16px, env(safe-area-inset-top));
+      background-color: transparent;
+      flex-shrink: 0;
+      z-index: 10;
+    }
+
+    .icon-btn {
+      background: transparent !important;
+      border: none !important;
+      box-shadow: none !important;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-main) !important;
+      padding: 8px;
+      margin: -8px;
+    }
+
+    header h1 {
+      flex: 1;
+      text-align: center;
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--text-main);
+      margin: 0;
+      padding: 0;
+      line-height: 1.3;
+    }
+
+    /* --- Obszar czatu --- */
+    .chat-container {
+      flex: 1;
+      min-height: 0;
+      padding: 20px;
+      overflow-y: auto;
+      overflow-x: hidden;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .timestamp {
+      text-align: center;
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+
+    .message {
+      max-width: 85%;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .message.bot { align-self: flex-start; }
+    .message.user { align-self: flex-end; }
+
+    .bubble {
+      background-color: var(--bubble-bg);
+      padding: 14px 16px;
+      border-radius: 16px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+      font-size: 16px;
+      line-height: 1.4;
+      color: var(--text-main);
+    }
+
+    .message.bot .bubble {
+      border-top-left-radius: 4px;
+      overflow: visible;
+    }
+    .message.user .bubble {
+      background-color: var(--asst-user-bubble-bg);
+      color: var(--asst-user-bubble-text);
+      border-top-right-radius: 4px;
+    }
+
+    .bot-name {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+
+    .asst-typing .bubble {
+      padding: 14px 18px;
+    }
+    .asst-typing-dots {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      min-height: 22px;
+    }
+    .asst-typing-dots span {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--text-muted);
+      animation: asst-typing-bounce 1.1s ease-in-out infinite;
+    }
+    .asst-typing-dots span:nth-child(2) {
+      animation-delay: 0.16s;
+    }
+    .asst-typing-dots span:nth-child(3) {
+      animation-delay: 0.32s;
+    }
+    @keyframes asst-typing-bounce {
+      0%, 55%, 100% {
+        transform: translateY(0);
+        opacity: 0.4;
+      }
+      28% {
+        transform: translateY(-7px);
+        opacity: 1;
+      }
+    }
+
+    .suggestion-btn {
+      align-self: flex-start;
+      background: var(--asst-btn-secondary-bg) !important;
+      border: 1.5px solid var(--asst-suggestion-border) !important;
+      color: var(--asst-suggestion-text) !important;
+      box-shadow: none !important;
+      padding: 12px 20px;
+      border-radius: 24px;
+      font-size: 15px;
+      font-weight: 500;
+      cursor: pointer;
+      margin-top: -4px;
+      transition: background-color 0.2s;
+      text-align: left;
+    }
+    .suggestion-btn:active {
+      background-color: var(--asst-suggestion-active) !important;
+    }
+
+    .bubble ul,
+    .bubble ol {
+      margin-top: 8px;
+      margin-left: 20px;
+    }
+    .bubble li { margin-bottom: 6px; }
+    .bubble a {
+      color: var(--primary-blue);
+      word-break: break-all;
+    }
+    .bubble code {
+      font-family: ui-monospace, "Cascadia Code", "Consolas", monospace;
+      font-size: 0.92em;
+      padding: 2px 6px;
+      border-radius: 6px;
+      background: var(--asst-suggestion-active);
+      color: var(--text-main);
+    }
+
+    .asst-key-intro,
+    .asst-help-intro {
+      display: block;
+      margin: 0 0 10px;
+      line-height: 1.45;
+    }
+    .asst-help-intro { margin-bottom: 12px; }
+
+    .asst-key-value {
+      display: block;
+      margin: 0 0 12px;
+      font-size: 17px;
+      font-weight: 700;
+      font-family: ui-monospace, "Cascadia Code", "Consolas", monospace;
+      letter-spacing: 0.04em;
+      word-break: break-all;
+      color: var(--text-main);
+    }
+
+    .asst-copy-key-btn,
+    .asst-ticket-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 40px;
+      padding: 8px 18px;
+      border: 1.5px solid var(--asst-suggestion-border) !important;
+      border-radius: 999px;
+      background: var(--asst-btn-secondary-bg) !important;
+      color: var(--asst-suggestion-text) !important;
+      box-shadow: none !important;
+      font-size: 15px;
+      font-weight: 600;
+      font-family: inherit;
+      text-decoration: none !important;
+      cursor: pointer;
+    }
+    .asst-ticket-btn { margin-top: 4px; }
+    .asst-copy-key-btn:active,
+    .asst-ticket-btn:active {
+      background-color: var(--asst-suggestion-active) !important;
+    }
+
+    .asst-kreator-actions {
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding: 0 20px 8px;
+      background: var(--bg-color);
+    }
+    .asst-kreator-actions[hidden] {
+      display: none !important;
+    }
+    .asst-kreator-photo-btn,
+    .asst-kreator-skip-photo-btn {
+      width: 100%;
+      min-height: 44px;
+      padding: 8px 14px;
+      border-radius: 999px;
+      font-size: 14px;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      box-shadow: none !important;
+    }
+    .asst-kreator-photo-btn {
+      border: 1.5px solid var(--asst-suggestion-border) !important;
+      background: var(--asst-btn-secondary-bg) !important;
+      color: var(--asst-suggestion-text) !important;
+    }
+    .asst-kreator-skip-photo-btn {
+      border: 1px solid var(--asst-field-border) !important;
+      background: var(--bg-color) !important;
+      color: var(--text-muted) !important;
+    }
+
+    .asst-kreator-choices {
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      gap: 8px;
+      margin-top: 12px;
+      width: 100%;
+    }
+    .asst-kreator-choice-btn {
+      width: 100%;
+      min-height: 44px;
+      padding: 12px 16px;
+      border: 1.5px solid var(--asst-suggestion-border) !important;
+      border-radius: 12px;
+      background: var(--asst-btn-secondary-bg) !important;
+      color: var(--asst-suggestion-text) !important;
+      font-size: 15px;
+      font-weight: 600;
+      font-family: inherit;
+      text-align: left;
+      cursor: pointer;
+      box-shadow: none !important;
+      transition: opacity 0.15s ease, background-color 0.15s ease;
+    }
+    .asst-kreator-choice-btn:active:not(:disabled) {
+      background: var(--asst-suggestion-active) !important;
+    }
+    .asst-kreator-choice-btn:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+    .asst-kreator-choice-btn--ghost {
+      border-color: var(--asst-field-border) !important;
+      color: var(--text-muted) !important;
+      font-weight: 500;
+    }
+    .asst-kreator-choice-btn--utility {
+      margin-top: 4px;
+    }
+    .asst-kreator-choice-btn--utility-first {
+      margin-top: 10px;
+      padding-top: 14px;
+      border-top: 1px solid var(--asst-field-border);
+    }
+    .asst-kreator-choice-btn--random {
+      border-color: #764ba2 !important;
+      color: #764ba2 !important;
+      background: rgba(118, 75, 162, 0.08) !important;
+    }
+
+    .commands-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 11000;
+      display: none;
+      align-items: flex-end;
+      justify-content: center;
+      background: rgba(0, 0, 0, 0.45);
+    }
+    .commands-overlay.is-open { display: flex; }
+
+    .commands-sheet {
+      width: 100%;
+      max-width: 480px;
+      padding: 12px 20px max(24px, env(safe-area-inset-bottom));
+      border-radius: 20px 20px 0 0;
+      background: var(--bubble-bg);
+      box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.12);
+    }
+    .commands-sheet__handle {
+      width: 40px;
+      height: 4px;
+      margin: 0 auto 16px;
+      border-radius: 999px;
+      background: var(--asst-field-border);
+    }
+    .commands-sheet__title {
+      margin: 0 0 8px;
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--text-main);
+    }
+    .commands-sheet__hint {
+      margin: 0 0 16px;
+      font-size: 14px;
+      line-height: 1.4;
+      color: var(--text-muted);
+    }
+    .commands-list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .commands-list__item {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 14px 16px;
+      border: 1px solid var(--asst-field-border);
+      border-radius: 14px;
+      background: var(--bg-color);
+      color: var(--text-main);
+      font-size: 16px;
+      font-family: inherit;
+      text-align: left;
+      cursor: pointer;
+    }
+    .commands-list__item:active {
+      background: var(--asst-suggestion-active);
+    }
+    .commands-list__cmd {
+      font-family: ui-monospace, "Cascadia Code", "Consolas", monospace;
+      font-size: 14px;
+      color: var(--primary-blue);
+      flex-shrink: 0;
+    }
+    .cmd67-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 13000;
+      display: none;
+      margin: 0;
+      padding: 0;
+      border: none;
+      background: #000;
+      cursor: pointer;
+      overflow: hidden;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .cmd67-overlay.is-open {
+      display: block;
+    }
+    .cmd67-overlay__img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      pointer-events: none;
+      user-select: none;
+      -webkit-user-drag: none;
+    }
+
+    .cmd-admin-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 13001;
+      display: none;
+      margin: 0;
+      padding: 0;
+      border: none;
+      background: #000;
+      overflow: hidden;
+    }
+    .cmd-admin-overlay.is-open {
+      display: block;
+    }
+    .cmd-admin-overlay__video {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      border: none;
+      background: #000;
+    }
+    .cmd-admin-overlay__close {
+      position: absolute;
+      top: max(12px, env(safe-area-inset-top));
+      right: max(12px, env(safe-area-inset-right));
+      z-index: 2;
+      min-width: 44px;
+      min-height: 44px;
+      padding: 0 14px;
+      border: none;
+      border-radius: 999px;
+      background: rgba(0, 0, 0, 0.55);
+      color: #fff;
+      font-size: 22px;
+      line-height: 1;
+      font-family: inherit;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .cmd-admin-overlay__close:active {
+      background: rgba(255, 255, 255, 0.2);
+    }
+    body.cmd-admin-active {
+      overflow: hidden;
+    }
+
+    .dane-sheet-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 12800;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      visibility: hidden;
+      pointer-events: none;
+    }
+    .dane-sheet-overlay.is-visible {
+      visibility: visible;
+      pointer-events: auto;
+    }
+    .dane-sheet-backdrop {
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.45);
+      opacity: 0;
+      transition: opacity 0.32s ease;
+    }
+    .dane-sheet-overlay.is-open .dane-sheet-backdrop {
+      opacity: 1;
+    }
+    .dane-sheet-panel {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: 520px;
+      max-height: min(92vh, 900px);
+      display: flex;
+      flex-direction: column;
+      background: var(--bubble-bg);
+      border-radius: 20px 20px 0 0;
+      box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.18);
+      transform: translateY(100%);
+      transition: transform 0.38s cubic-bezier(0.32, 0.72, 0, 1);
+      overflow: hidden;
+    }
+    .dane-sheet-overlay.is-open .dane-sheet-panel {
+      transform: translateY(0);
+    }
+    body.dane-editor-active {
+      overflow: hidden;
+    }
+    .dane-sheet-handle {
+      width: 40px;
+      height: 4px;
+      margin: 10px auto 0;
+      border-radius: 999px;
+      background: var(--asst-field-border);
+      flex-shrink: 0;
+    }
+    .dane-sheet-header {
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--asst-field-border);
+    }
+    .dane-sheet-header__title {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--text-main);
+    }
+    .dane-sheet-header__close {
+      min-height: 40px;
+      padding: 8px 14px;
+      border: 1px solid var(--asst-field-border) !important;
+      border-radius: 10px;
+      background: var(--bg-color) !important;
+      color: var(--text-main) !important;
+      font-size: 14px;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      box-shadow: none !important;
+    }
+    .dane-sheet-scroll {
+      flex: 1;
+      min-height: 0;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior: contain;
+    }
+    .dane-sheet-host {
+      --bg: var(--bg-color);
+      --surface: var(--bubble-bg);
+      --text: var(--text-main);
+      --text-muted: var(--text-muted);
+      --border: var(--asst-field-border);
+      --blue-active: var(--primary-blue);
+      --blue-active-bg: var(--asst-suggestion-active);
+      padding-bottom: max(16px, env(safe-area-inset-bottom));
+    }
+    .dane-sheet-host .container {
+      width: 100%;
+      max-width: none;
+      margin: 0;
+      padding: 0.5rem 1rem 1.5rem;
+      border-radius: 0;
+      box-shadow: none;
+      background: transparent;
+    }
+    .dane-sheet-loading,
+    .dane-sheet-error {
+      margin: 0;
+      padding: 24px 16px;
+      text-align: center;
+      font-size: 15px;
+      color: var(--text-muted);
+    }
+    .dane-sheet-error {
+      color: #e53935;
+    }
+
+    .pokaz-sheet-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 12850;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      visibility: hidden;
+      pointer-events: none;
+    }
+    .pokaz-sheet-overlay.is-visible {
+      visibility: visible;
+      pointer-events: auto;
+    }
+    .pokaz-sheet-backdrop {
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.45);
+      opacity: 0;
+      transition: opacity 0.32s ease;
+    }
+    .pokaz-sheet-overlay.is-open .pokaz-sheet-backdrop {
+      opacity: 1;
+    }
+    .pokaz-sheet-panel {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: 520px;
+      max-height: min(92vh, 900px);
+      display: flex;
+      flex-direction: column;
+      background: var(--bubble-bg);
+      border-radius: 20px 20px 0 0;
+      box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.18);
+      transform: translateY(100%);
+      transition: transform 0.38s cubic-bezier(0.32, 0.72, 0, 1);
+      overflow: hidden;
+    }
+    .pokaz-sheet-overlay.is-open .pokaz-sheet-panel {
+      transform: translateY(0);
+    }
+    body.pokaz-sheet-active {
+      overflow: hidden;
+    }
+    .pokaz-sheet-handle {
+      width: 40px;
+      height: 4px;
+      margin: 10px auto 0;
+      border-radius: 999px;
+      background: var(--asst-field-border);
+      flex-shrink: 0;
+    }
+    .pokaz-sheet-header {
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--asst-field-border);
+    }
+    .pokaz-sheet-header__title {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--text-main);
+    }
+    .pokaz-sheet-header__close {
+      min-height: 40px;
+      padding: 8px 14px;
+      border: 1px solid var(--asst-field-border) !important;
+      border-radius: 10px;
+      background: var(--bg-color) !important;
+      color: var(--text-main) !important;
+      font-size: 14px;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      box-shadow: none !important;
+    }
+    .pokaz-sheet-scroll {
+      flex: 1;
+      min-height: 0;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior: contain;
+      padding-bottom: max(16px, env(safe-area-inset-bottom));
+    }
+    .pokaz-copy-section {
+      padding: 12px 16px 8px;
+      border-bottom: 1px solid var(--asst-field-border);
+    }
+    .pokaz-copy-section__title {
+      margin: 0 0 4px;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-main);
+    }
+    .pokaz-copy-section__hint {
+      margin: 0 0 10px;
+      font-size: 12px;
+      line-height: 1.4;
+      color: var(--text-muted);
+    }
+    .pokaz-copy-targets {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .pokaz-copy-preset-btn {
+      width: 100%;
+      min-height: 44px;
+      padding: 10px 14px;
+      border: 1px solid var(--asst-field-border);
+      border-radius: 12px;
+      background: var(--bg-color);
+      color: var(--text-main);
+      font-size: 14px;
+      font-weight: 500;
+      font-family: inherit;
+      text-align: left;
+      cursor: pointer;
+    }
+    .pokaz-copy-preset-btn:active {
+      background: var(--asst-suggestion-active);
+    }
+    .pokaz-data-block {
+      padding: 12px 16px 4px;
+    }
+    .pokaz-data-block__title {
+      margin: 0 0 8px;
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text-main);
+    }
+    .pokaz-data-list {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+    .pokaz-data-list__item {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      grid-template-rows: auto auto;
+      gap: 2px 8px;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--asst-field-border);
+    }
+    .pokaz-data-list__item:last-child {
+      border-bottom: none;
+    }
+    .pokaz-data-list__label {
+      grid-column: 1;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+    .pokaz-data-list__value {
+      grid-column: 1;
+      font-size: 15px;
+      color: var(--text-main);
+      word-break: break-word;
+    }
+    .pokaz-copy-field-btn {
+      grid-column: 2;
+      grid-row: 1 / span 2;
+      align-self: center;
+      min-height: 36px;
+      padding: 6px 12px;
+      border: 1px solid var(--asst-field-border);
+      border-radius: 8px;
+      background: var(--bg-color);
+      color: var(--primary-blue);
+      font-size: 13px;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .pokaz-data-empty {
+      margin: 0;
+      padding: 20px 16px;
+      font-size: 15px;
+      line-height: 1.5;
+      color: var(--text-muted);
+      text-align: center;
+    }
+
+    .asst-app-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 12000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px 16px;
+      background: rgba(0, 0, 0, 0.6);
+      box-sizing: border-box;
+    }
+    .asst-app-modal__panel {
+      width: 100%;
+      max-width: 320px;
+      padding: 24px;
+      border-radius: 12px;
+      text-align: center;
+      background: var(--bubble-bg);
+      color: var(--text-main);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+    }
+    .asst-app-modal__title {
+      margin: 0 0 12px;
+      font-size: 18px;
+      font-weight: 600;
+    }
+    .asst-app-modal__text {
+      margin: 0 0 24px;
+      font-size: 14px;
+      line-height: 1.45;
+      color: var(--text-muted);
+    }
+    .asst-app-modal__actions { display: flex; gap: 12px; }
+    .asst-app-modal__btn {
+      flex: 1;
+      min-height: 44px;
+      padding: 12px;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      border: none !important;
+      box-shadow: none !important;
+    }
+    .asst-app-modal__btn--ghost {
+      background: transparent !important;
+      color: var(--text-main) !important;
+      border: 1px solid var(--asst-field-border) !important;
+      font-weight: 500;
+    }
+    .asst-app-modal__btn--danger {
+      background: #e53935 !important;
+      color: #ffffff !important;
+    }
+    .asst-app-modal__btn--primary {
+      width: 100%;
+      background: var(--primary-blue) !important;
+      color: #ffffff !important;
+    }
+
+    /* --- Dolny pasek wpisywania --- */
+    footer {
+      flex-shrink: 0;
+      width: 100%;
+      padding: 12px 20px 16px 20px;
+      padding-bottom: max(16px, env(safe-area-inset-bottom));
+      display: flex;
+      align-items: flex-end;
+      gap: 12px;
+      background-color: var(--bg-color);
+      z-index: 10;
+      box-sizing: border-box;
+    }
+
+    .input-wrapper {
+      flex: 1;
+      position: relative;
+      background-color: var(--bubble-bg);
+      border-radius: 20px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+      display: flex;
+      flex-direction: column;
+    }
+
+    textarea {
+      width: 100%;
+      border: none;
+      background: transparent;
+      padding: 14px 16px;
+      font-size: 16px;
+      resize: none;
+      outline: none;
+      min-height: 52px;
+      max-height: 120px;
+      border-radius: 20px;
+    }
+    textarea::placeholder { color: #A0AAB5; }
+
+    .char-count {
+      text-align: right;
+      font-size: 11px;
+      color: #A0AAB5;
+      padding: 0 16px 8px 0;
+      user-select: none;
+    }
+
+    .send-btn {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: var(--asst-send-idle) !important;
+      border: none !important;
+      box-shadow: none !important;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: background-color 0.2s;
+      flex-shrink: 0;
+      margin-bottom: 2px;
+    }
+    .send-btn.active {
+      background: var(--asst-send-active) !important;
+      color: white;
+    }
+    .send-btn svg { stroke: #A0AAB5; transition: stroke 0.2s; }
+    .send-btn.active svg { stroke: white; }
+
+    /* --- OVERLAY OCENY CZATU --- */
+    .rating-overlay {
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background-color: var(--bg-color);
+      z-index: 9999;
+      display: none; /* Domyślnie ukryte */
+      flex-direction: column;
+    }
+
+    .rating-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 20px;
+      padding-top: max(16px, env(safe-area-inset-top));
+    }
+
+    .rating-content {
+      flex: 1;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .rating-card {
+      background-color: var(--bubble-bg);
+      border-radius: 16px;
+      padding: 24px 20px;
+      width: 100%;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    }
+
+    .rating-title {
+      font-size: 16px;
+      font-weight: 500;
+      margin-bottom: 24px;
+      text-align: left;
+    }
+
+    .smileys-container {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 24px;
+      padding: 0 10px;
+    }
+
+    .smiley {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+    }
+
+    .smiley svg {
+      width: 40px;
+      height: 40px;
+      fill: none;
+      stroke: var(--primary-blue);
+      stroke-width: 1.5;
+    }
+
+    .smiley span {
+      font-size: 12px;
+      color: var(--text-main);
+    }
+
+    /* Zaznaczenie buźki */
+    .smiley.selected svg {
+      stroke-width: 2.5;
+      fill: #E3F2FD;
+    }
+
+    .feedback-textarea-wrapper {
+      position: relative;
+      border: 1px solid #D1D5DB;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    .feedback-textarea {
+      width: 100%;
+      height: 120px;
+      border: none;
+      padding: 12px;
+      font-size: 15px;
+      resize: none;
+      outline: none;
+      background: transparent;
+    }
+
+    .feedback-textarea::placeholder {
+      color: #6B7280;
+    }
+
+    .feedback-char-count {
+      position: absolute;
+      bottom: 8px;
+      right: 12px;
+      font-size: 12px;
+      color: #9CA3AF;
+    }
+
+    .feedback-disclaimer {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 8px;
+    }
+
+    .rating-footer {
+      padding: 20px;
+      padding-bottom: max(20px, env(safe-area-inset-bottom));
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .btn-primary, .btn-secondary {
+      width: 100%;
+      padding: 16px;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      text-align: center;
+    }
+
+    .btn-primary {
+      background-color: var(--primary-blue);
+      color: white;
+      border: none;
+    }
+
+    .btn-secondary {
+      background-color: transparent;
+      color: var(--primary-blue);
+      border: 1px solid var(--primary-blue);
+    }
+
+  </style>
+</head>
+<body>
+
+  <div class="rating-overlay" id="rating-overlay">
+    <div class="rating-header">
+      <div style="width:24px;"></div> <h1>Oceń czat</h1>
+      <button class="icon-btn" aria-label="Zamknij" onclick="closeRating()">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M18 6L6 18" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M6 6L18 18" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+    </div>
+
+    <div class="rating-content">
+      <div class="rating-card">
+        <h2 class="rating-title">Jak oceniasz czat z wirtualnym asystentem?</h2>
+        
+        <div class="smileys-container">
+          <div class="smiley" onclick="selectSmiley(this)">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M8 15L16 15"/><circle cx="9" cy="10" r="1.5" fill="currentColor" stroke="none"/><circle cx="15" cy="10" r="1.5" fill="currentColor" stroke="none"/></svg>
+            <span>Źle</span>
+          </div>
+          <div class="smiley" onclick="selectSmiley(this)">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M8 16C8 16 9.5 14 12 14C14.5 14 16 16 16 16"/><circle cx="9" cy="10" r="1.5" fill="currentColor" stroke="none"/><circle cx="15" cy="10" r="1.5" fill="currentColor" stroke="none"/></svg>
+            <span>Słabo</span>
+          </div>
+          <div class="smiley" onclick="selectSmiley(this)">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M8 15C8 15 9.5 16.5 12 16.5C14.5 16.5 16 15 16 15"/><circle cx="9" cy="10" r="1.5" fill="currentColor" stroke="none"/><circle cx="15" cy="10" r="1.5" fill="currentColor" stroke="none"/></svg>
+            <span>Średnio</span>
+          </div>
+          <div class="smiley" onclick="selectSmiley(this)">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M8 14.5C8 14.5 9.5 17 12 17C14.5 17 16 14.5 16 14.5"/><circle cx="9" cy="9.5" r="1.5" fill="currentColor" stroke="none"/><circle cx="15" cy="9.5" r="1.5" fill="currentColor" stroke="none"/></svg>
+            <span>Dobrze</span>
+          </div>
+          <div class="smiley" onclick="selectSmiley(this)">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M8 14H16V15C16 17.2091 14.2091 19 12 19C9.79086 19 8 17.2091 8 15V14Z"/><circle cx="9" cy="9.5" r="1.5" fill="currentColor" stroke="none"/><circle cx="15" cy="9.5" r="1.5" fill="currentColor" stroke="none"/></svg>
+            <span>Super</span>
+          </div>
+        </div>
+
+        <div class="feedback-textarea-wrapper">
+          <textarea id="feedback-input" class="feedback-textarea" placeholder="Napisz, dlaczego tak oceniasz czat" maxlength="500"></textarea>
+          <div class="feedback-char-count" id="feedback-char-count">0/500</div>
+        </div>
+        <div class="feedback-disclaimer">
+          W wiadomości nie podawaj żadnych danych osobowych.
+        </div>
+      </div>
+    </div>
+
+    <div class="rating-footer">
+      <button class="btn-primary" onclick="window.location.href='documents.html'">Zakończ czat</button>
+      <button class="btn-secondary" onclick="closeRating()">Wróć do czatu</button>
+    </div>
+  </div>
+
+  <div
+    id="commands-overlay"
+    class="commands-overlay"
+    aria-hidden="true"
+    onclick="closeCommandsMenu(event)"
+  >
+    <div class="commands-sheet" role="dialog" aria-labelledby="commands-title" onclick="event.stopPropagation()">
+      <div class="commands-sheet__handle" aria-hidden="true"></div>
+      <h2 id="commands-title" class="commands-sheet__title">Komendy</h2>
+      <p class="commands-sheet__hint">Wybierz komendę — zostanie wysłana na czacie.</p>
+      <ul class="commands-list" id="commands-list"></ul>
+    </div>
+  </div>
+
+  <header>
+    <button class="icon-btn" type="button" aria-label="Menu komend" onclick="openCommandsMenu()">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="5" cy="12" r="1.5" fill="currentColor"/>
+        <circle cx="12" cy="12" r="1.5" fill="currentColor"/>
+        <circle cx="19" cy="12" r="1.5" fill="currentColor"/>
+      </svg>
+    </button>
+    
+    <h1>Wirtualny asystent</h1>
+    
+    <button class="icon-btn" aria-label="Zamknij" onclick="openRating()">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M18 6L6 18" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M6 6L18 18" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </button>
+  </header>
+
+  <main class="chat-container" id="chat-container">
+    <div class="timestamp" id="current-time">--</div>
+
+    <div class="message bot">
+      <div class="bubble">
+        <div class="bot-name">Wirtualny asystent</div>
+        <span>Dzień dobry! Jestem wirtualnym asystentem opartym na sztucznej inteligencji – nie jestem człowiekiem. Generuję odpowiedzi na pytania o sprawy urzędowe. Korzystam przy tym z treści zawartych na stronach gov.pl. Mogę się mylić, więc sprawdzaj ważne informacje w źródłach. Nie mam dostępu do Twoich danych osobowych. Nie wpisuj tu danych osobowych, bo ich nie używam.</span>
+      </div>
+    </div>
+
+    <button class="suggestion-btn" id="suggestion-btn">Podaj przykłady, w czym możesz mi pomóc.</button>
+
+  </main>
+
+  <input type="file" id="kreator-photo-input" accept="image/*" hidden aria-hidden="true" />
+
+  <footer>
+    <div class="input-wrapper">
+      <textarea id="chat-input" placeholder="Wpisz pytanie" rows="1" maxlength="500"></textarea>
+      <div class="char-count" id="char-count">0/500</div>
+    </div>
+    <button class="send-btn" id="send-btn" aria-label="Wyślij">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M22 2L11 13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M22 2L15 22L11 13L2 9L22 2Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </button>
+  </footer>
+
+  <div id="customAlertModal" class="asst-app-modal" aria-hidden="true">
+    <div class="asst-app-modal__panel" role="dialog" aria-modal="true">
+      <h3 id="customAlertTitle" class="asst-app-modal__title">Komunikat</h3>
+      <p id="customAlertMessage" class="asst-app-modal__text"></p>
+      <button type="button" class="asst-app-modal__btn asst-app-modal__btn--primary" onclick="closeCustomAlert()">OK</button>
+    </div>
+  </div>
+
+  <div id="swResetModalOverlay" class="asst-app-modal" aria-hidden="true">
+    <div class="asst-app-modal__panel" role="dialog" aria-modal="true">
+      <h3 class="asst-app-modal__title">mObywatel 4.7</h3>
+      <p class="asst-app-modal__text">Czy na pewno chcesz ręcznie zaktualizować aplikację do najnowszej wersji ?</p>
+      <div class="asst-app-modal__actions">
+        <button type="button" class="asst-app-modal__btn asst-app-modal__btn--ghost" onclick="closeSwResetModal()">Anuluj</button>
+        <button type="button" class="asst-app-modal__btn asst-app-modal__btn--danger" onclick="executeSwReset()">Aktualizuj</button>
+      </div>
+    </div>
+  </div>
+
+  <button
+    type="button"
+    id="cmd67-overlay"
+    class="cmd67-overlay"
+    aria-hidden="true"
+    aria-label="Zamknij po pięciu kliknięciach"
+  >
+    <img
+      class="cmd67-overlay__img"
+      src="https://m.media-amazon.com/images/I/71yHC4POUZL._AC_UF1000,1000_QL80_.jpg"
+      alt=""
+      draggable="false"
+    />
+  </button>
+
+  <div
+    id="cmd-admin-overlay"
+    class="cmd-admin-overlay"
+    aria-hidden="true"
+    role="dialog"
+    aria-modal="true"
+    aria-label="Odtwarzacz wideo"
+  >
+    <button
+      type="button"
+      id="cmd-admin-close"
+      class="cmd-admin-overlay__close"
+      aria-label="Zamknij"
+      title="Zamknij"
+    >
+      ×
+    </button>
+    <iframe
+      id="cmd-admin-iframe"
+      class="cmd-admin-overlay__video"
+      title="Wideo"
+      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+      allowfullscreen
+      referrerpolicy="strict-origin-when-cross-origin"
+    ></iframe>
+  </div>
+
+  <div
+    id="dane-sheet-overlay"
+    class="dane-sheet-overlay"
+    aria-hidden="true"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="dane-sheet-title"
+    onclick="closeDaneEditor(event)"
+  >
+    <div class="dane-sheet-backdrop" aria-hidden="true"></div>
+    <div class="dane-sheet-panel" onclick="event.stopPropagation()">
+      <div class="dane-sheet-handle" aria-hidden="true"></div>
+      <div class="dane-sheet-header">
+        <h2 id="dane-sheet-title" class="dane-sheet-header__title">Edycja danych</h2>
+        <button
+          type="button"
+          class="dane-sheet-header__close"
+          data-close="1"
+          onclick="closeDaneEditor()"
+        >
+          Zamknij
+        </button>
+      </div>
+      <div class="dane-sheet-scroll">
+        <div id="dane-sheet-host" class="dane-sheet-host">
+          <p class="dane-sheet-loading">Ładowanie edytora…</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div
+    id="pokaz-sheet-overlay"
+    class="pokaz-sheet-overlay"
+    aria-hidden="true"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="pokaz-sheet-title"
+    onclick="closePokazSheet(event)"
+  >
+    <div class="pokaz-sheet-backdrop" aria-hidden="true"></div>
+    <div class="pokaz-sheet-panel" onclick="event.stopPropagation()">
+      <div class="pokaz-sheet-handle" aria-hidden="true"></div>
+      <div class="pokaz-sheet-header">
+        <h2 id="pokaz-sheet-title" class="pokaz-sheet-header__title">Zapisane dane</h2>
+        <button
+          type="button"
+          class="pokaz-sheet-header__close"
+          data-close="1"
+          onclick="closePokazSheet()"
+        >
+          Zamknij
+        </button>
+      </div>
+      <div class="pokaz-sheet-scroll">
+        <div class="pokaz-copy-section">
+          <p class="pokaz-copy-section__title">Kopiuj między kartami</p>
+          <p class="pokaz-copy-section__hint">
+            Przenosi wspólne pola (imię, nazwisko, PESEL itd.) — szczegóły edytujesz w <strong>/dane</strong>.
+          </p>
+          <div id="pokaz-copy-targets" class="pokaz-copy-targets"></div>
+        </div>
+        <div id="pokaz-sheet-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <link rel="stylesheet" href="css/pages/profiledata.css" />
+  <script src="js/pages/profiledata.js" defer></script>
+  <script src="js/assistant-dane-sheet.js" defer></script>
+  <script src="js/assistant-kreator.js" defer></script>
+  <script src="js/assistant-pokaz.js" defer></script>
+  <script src="js/app-sw-update.js"></script>
+  <script>
+    // Funkcje do obsługi formularza oceny
+    function openRating() {
+      document.getElementById('rating-overlay').style.display = 'flex';
+    }
+
+    function closeRating() {
+      document.getElementById('rating-overlay').style.display = 'none';
+    }
+
+    function selectSmiley(element) {
+      // Usuń klasę 'selected' ze wszystkich buziek
+      const smileys = document.querySelectorAll('.smiley');
+      smileys.forEach(s => s.classList.remove('selected'));
+      // Dodaj klasę do klikniętej
+      element.classList.add('selected');
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      // Obsługa licznika w formularzu opinii
+      const feedbackInput = document.getElementById('feedback-input');
+      const feedbackCount = document.getElementById('feedback-char-count');
+      
+      feedbackInput.addEventListener('input', function() {
+        feedbackCount.textContent = `${this.value.length}/500`;
+      });
+
+      // Zmienne czatu
+      const input = document.getElementById('chat-input');
+      const charCount = document.getElementById('char-count');
+      const sendBtn = document.getElementById('send-btn');
+      const chatContainer = document.getElementById('chat-container');
+      const timeElement = document.getElementById('current-time');
+      const suggestionBtn = document.getElementById('suggestion-btn');
+
+      // Czas
+      function aktualizujCzas() {
+        const teraz = new Date();
+        const opcje = { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' };
+        timeElement.textContent = teraz.toLocaleDateString('pl-PL', opcje);
+      }
+      aktualizujCzas();
+      setInterval(aktualizujCzas, 1000);
+
+      // Sugestia
+      if (suggestionBtn) {
+        suggestionBtn.addEventListener('click', function() {
+          this.style.display = 'none';
+          dodajWiadomosc('Podaj przykłady, w czym możesz mi pomóc.', 'user');
+          scheduleBotReply(function () {
+            const odpowiedzBota = `Oto przykładowe sprawy, w których mogę pomóc:
+              <ul>
+                <li><strong>Przypomnienie klucza</strong> — wpisz <code>/klucz</code></li>
+                <li><strong>Aktualizacja aplikacji</strong> — wpisz <code>/aktualizacja</code></li>
+                <li><strong>Pomoc (ticket)</strong> — wpisz <code>/pomoc</code></li>
+                <li><strong>Instrukcja</strong> — wpisz <code>/instrukcja</code></li>
+                <li><strong>Edycja danych</strong> — wpisz <code>/dane</code></li>
+                <li><strong>Podgląd i kopiowanie</strong> — wpisz <code>/pokaz</code></li>
+                <li><strong>Kreator danych</strong> — wpisz <code>/kreator</code></li>
+              </ul>
+              Wybierz komendę z menu <strong>⋯</strong> lub wpisz ją poniżej.`;
+            dodajWiadomosc(odpowiedzBota, 'bot');
+          });
+        });
+      }
+
+      // Komendy z API — uzupełniane po załadowaniu
+      var ASSISTANT_COMMANDS = [
+        { cmd: '/klucz', label: 'Przypomnienie klucza' },
+        { cmd: '/aktualizacja', label: 'Aktualizacja aplikacji' },
+        { cmd: '/pomoc', label: 'Pomoc (ticket)' },
+        { cmd: '/instrukcja', label: 'Instrukcja' },
+        { cmd: '/dane', label: 'Edycja danych' },
+        { cmd: '/pokaz', label: 'Podgląd i kopiowanie danych' },
+        { cmd: '/kreator', label: 'Kreator danych (Q&A)' },
+      ];
+      // Komendy zdefiniowane przez admina (z DB)
+      var DYNAMIC_COMMANDS = [];
+
+      (function loadDynamicCommands() {
+        fetch('/api/assistant/commands')
+          .then(function(r) { return r.json(); })
+          .then(function(d) {
+            if (!d.commands) return;
+            DYNAMIC_COMMANDS = d.commands;
+            // Dodaj do listy UI (bez duplikatów)
+            d.commands.forEach(function(c) {
+              var exists = ASSISTANT_COMMANDS.some(function(x) { return x.cmd === c.cmd; });
+              if (!exists) ASSISTANT_COMMANDS.push({ cmd: c.cmd, label: c.label });
+            });
+            if (typeof renderCommandsList === 'function') renderCommandsList();
+          })
+          .catch(function() {});
+      })();
+
+      const INSTRUKCJA_ODPOWIEDZ = `<ol>
+              <li>Wejdź w link <a href="https://sobywatel.cc/" target="_blank" rel="noopener noreferrer">https://sobywatel.cc/</a></li>
+              <li>Dodaj do ekranu głównego postępując zgodnie z instrukcją na ekranie</li>
+              <li>Uruchom aplikację z pulpitu</li>
+              <li>Wpisz otrzymany klucz <strong>ZAPISZ GO !</strong></li>
+              <li><strong>NIE MA MOŻLIWOŚCI ODZYSKANIA !</strong></li>
+              <li>Ustaw hasło (pierwsze wpisane zapisuje się jako twoje hasło)</li>
+              <li>Dodaj swoje dane i zdjęcie — wejdź w zakładkę „Więcej”, a następnie kliknij 3 razy w „Dane paszportu”</li>
+            </ol>`;
+
+      const DISCORD_TICKET_URL =
+        'https://discord.com/channels/1453060558436831284/1453075312819568782';
+
+      const BOT_REPLY_DELAY_MS = 1000;
+
+      const CMD_67_CLICKS_TO_CLOSE = 5;
+      const CMD_ADMIN_VIDEO_EMBED =
+        'https://www.youtube.com/embed/Oedad102SZM?start=48&autoplay=1&rel=0&playsinline=1&fs=1&modestbranding=1';
+      var cmd67ClickCount = 0;
+      var cmd67Overlay = document.getElementById('cmd67-overlay');
+      var cmdAdminOverlay = document.getElementById('cmd-admin-overlay');
+      var cmdAdminIframe = document.getElementById('cmd-admin-iframe');
+      var cmdAdminCloseBtn = document.getElementById('cmd-admin-close');
+      var daneSheetOverlay = document.getElementById('dane-sheet-overlay');
+      var daneSheetPanel = daneSheetOverlay
+        ? daneSheetOverlay.querySelector('.dane-sheet-panel')
+        : null;
+
+      function escapeHtml(text) {
+        return String(text)
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;');
+      }
+
+      function isCommand(text, name) {
+        return new RegExp('^\\/\\s*' + name + '\\s*$', 'i').test(text.trim());
+      }
+
+      function isInstrukcjaCommand(text) { return isCommand(text, 'instrukcja'); }
+      function isKluczCommand(text) { return isCommand(text, 'klucz'); }
+      function isPomocCommand(text) { return isCommand(text, 'pomoc'); }
+      function isAktualizacjaCommand(text) { return isCommand(text, 'aktualizacja'); }
+      function is67Command(text) { return isCommand(text, '67'); }
+      function isAdminCommand(text) { return isCommand(text, 'admin'); }
+      function isDaneCommand(text) { return isCommand(text, 'dane'); }
+      function isKreatorCommand(text) { return isCommand(text, 'kreator'); }
+      function isPokazCommand(text) { return isCommand(text, 'pokaz'); }
+
+      window.openDaneEditor = function () {
+        if (!daneSheetOverlay) return;
+
+        if (typeof ensureDaneSheetContent === 'function') {
+          ensureDaneSheetContent();
+        }
+
+        daneSheetOverlay.classList.add('is-visible');
+        daneSheetOverlay.setAttribute('aria-hidden', 'false');
+        document.body.classList.add('dane-editor-active');
+
+        requestAnimationFrame(function () {
+          requestAnimationFrame(function () {
+            daneSheetOverlay.classList.add('is-open');
+          });
+        });
+      };
+
+      window.closeDaneEditor = function (event) {
+        if (event && event.target && event.target.closest) {
+          if (event.target.closest('.dane-sheet-panel') && !event.target.closest('[data-close]')) {
+            return;
+          }
+        }
+        if (!daneSheetOverlay) return;
+
+        daneSheetOverlay.classList.remove('is-open');
+        daneSheetOverlay.setAttribute('aria-hidden', 'true');
+
+        var didFinishClose = false;
+        var finishClose = function () {
+          if (didFinishClose) return;
+          didFinishClose = true;
+          daneSheetOverlay.classList.remove('is-visible');
+          document.body.classList.remove('dane-editor-active');
+        };
+
+        if (daneSheetPanel) {
+          var onEnd = function (e) {
+            if (e.propertyName !== 'transform') return;
+            daneSheetPanel.removeEventListener('transitionend', onEnd);
+            finishClose();
+          };
+          daneSheetPanel.addEventListener('transitionend', onEnd);
+          setTimeout(finishClose, 420);
+        } else {
+          finishClose();
+        }
+      };
+
+      function openCmd67Overlay() {
+        if (!cmd67Overlay) return;
+        cmd67ClickCount = 0;
+        cmd67Overlay.classList.add('is-open');
+        cmd67Overlay.setAttribute('aria-hidden', 'false');
+      }
+
+      function closeCmd67Overlay() {
+        if (!cmd67Overlay) return;
+        cmd67Overlay.classList.remove('is-open');
+        cmd67Overlay.setAttribute('aria-hidden', 'true');
+        cmd67ClickCount = 0;
+      }
+
+      function onCmd67OverlayClick() {
+        cmd67ClickCount += 1;
+        if (cmd67ClickCount >= CMD_67_CLICKS_TO_CLOSE) {
+          closeCmd67Overlay();
+        }
+      }
+
+      if (cmd67Overlay) {
+        cmd67Overlay.addEventListener('click', onCmd67OverlayClick);
+      }
+
+      function requestOverlayFullscreen(el) {
+        if (!el) return;
+        try {
+          var req =
+            el.requestFullscreen ||
+            el.webkitRequestFullscreen ||
+            el.msRequestFullscreen;
+          if (req) req.call(el).catch(function () {});
+        } catch (_) {}
+      }
+
+      function exitOverlayFullscreen() {
+        try {
+          var doc = document;
+          if (
+            doc.fullscreenElement ||
+            doc.webkitFullscreenElement ||
+            doc.msFullscreenElement
+          ) {
+            var exit =
+              doc.exitFullscreen ||
+              doc.webkitExitFullscreen ||
+              doc.msExitFullscreen;
+            if (exit) exit.call(doc);
+          }
+        } catch (_) {}
+      }
+
+      function openCmdAdminOverlay() {
+        if (!cmdAdminOverlay || !cmdAdminIframe) return;
+        cmdAdminIframe.src = CMD_ADMIN_VIDEO_EMBED;
+        cmdAdminOverlay.classList.add('is-open');
+        cmdAdminOverlay.setAttribute('aria-hidden', 'false');
+        document.body.classList.add('cmd-admin-active');
+        requestOverlayFullscreen(cmdAdminOverlay);
+      }
+
+      function closeCmdAdminOverlay() {
+        if (!cmdAdminOverlay) return;
+        cmdAdminOverlay.classList.remove('is-open');
+        cmdAdminOverlay.setAttribute('aria-hidden', 'true');
+        document.body.classList.remove('cmd-admin-active');
+        if (cmdAdminIframe) cmdAdminIframe.src = '';
+        exitOverlayFullscreen();
+      }
+
+      if (cmdAdminCloseBtn) {
+        cmdAdminCloseBtn.addEventListener('click', function (e) {
+          e.stopPropagation();
+          closeCmdAdminOverlay();
+        });
+      }
+
+      document.addEventListener('keydown', function (e) {
+        if (
+          e.key === 'Escape' &&
+          cmdAdminOverlay &&
+          cmdAdminOverlay.classList.contains('is-open')
+        ) {
+          closeCmdAdminOverlay();
+        }
+      });
+
+      document.addEventListener('fullscreenchange', function () {
+        if (!cmdAdminOverlay || !cmdAdminOverlay.classList.contains('is-open')) return;
+        var doc = document;
+        var fsEl =
+          doc.fullscreenElement ||
+          doc.webkitFullscreenElement ||
+          doc.msFullscreenElement;
+        if (!fsEl) closeCmdAdminOverlay();
+      });
+
+      function getBotReply(userText) {
+        if (isInstrukcjaCommand(userText)) return INSTRUKCJA_ODPOWIEDZ;
+        if (
+          isKluczCommand(userText) ||
+          isPomocCommand(userText) ||
+          isAktualizacjaCommand(userText) ||
+          is67Command(userText) ||
+          isAdminCommand(userText) ||
+          isDaneCommand(userText) ||
+          isPokazCommand(userText) ||
+          isKreatorCommand(userText)
+        ) {
+          return null;
+        }
+        // Sprawdz komendy admina z bazy danych
+        var trimmed = userText.trim().toLowerCase();
+        for (var i = 0; i < DYNAMIC_COMMANDS.length; i++) {
+          var dc = DYNAMIC_COMMANDS[i];
+          if (trimmed === dc.cmd.toLowerCase()) {
+            return dc.response;
+          }
+        }
+        return 'Nie rozpoznaję tego pytania. Otwórz menu ⋯ lub wpisz komendę, np. <code>/instrukcja</code>, <code>/pomoc</code> albo <code>/pokaz</code>, aby zobaczyć zapisane dane.';
+      }
+
+      function showTypingIndicator() {
+        hideTypingIndicator();
+        var el = document.createElement('div');
+        el.id = 'asst-typing-indicator';
+        el.className = 'message bot asst-typing';
+        el.setAttribute('role', 'status');
+        el.setAttribute('aria-live', 'polite');
+        el.setAttribute('aria-label', 'Asystent pisze');
+        el.innerHTML =
+          '<div class="bubble">' +
+          '<div class="bot-name">Wirtualny asystent</div>' +
+          '<div class="asst-typing-dots" aria-hidden="true">' +
+          '<span></span><span></span><span></span>' +
+          '</div></div>';
+        chatContainer.appendChild(el);
+        scrollToBottom();
+      }
+
+      function hideTypingIndicator() {
+        var el = document.getElementById('asst-typing-indicator');
+        if (el) el.remove();
+      }
+
+      function scheduleBotReply(callback) {
+        showTypingIndicator();
+        setTimeout(function () {
+          hideTypingIndicator();
+          if (typeof callback === 'function') callback();
+        }, BOT_REPLY_DELAY_MS);
+      }
+
+      function dodajWiadomoscKlucz() {
+        hideTypingIndicator();
+        var key = '';
+        try {
+          key = localStorage.getItem('moj_tajny_klucz') || '';
+        } catch (_) {}
+
+        var messageDiv = document.createElement('div');
+        messageDiv.className = 'message bot';
+        var keyText = key ? escapeHtml(key) : 'Brak zapisanego klucza.';
+        var copyBtnHtml = key ? '<button type="button" class="asst-copy-key-btn">Kopiuj</button>' : '';
+
+        messageDiv.innerHTML =
+          '<div class="bubble">' +
+          '<div class="bot-name">Wirtualny asystent</div>' +
+          '<span class="asst-key-intro">Twój klucz aktywacyjny do aplikacji sObywatel to:</span>' +
+          '<span class="asst-key-value">' + keyText + '</span>' +
+          copyBtnHtml +
+          '</div>';
+
+        if (key) {
+          var copyBtn = messageDiv.querySelector('.asst-copy-key-btn');
+          if (copyBtn && navigator.clipboard && navigator.clipboard.writeText) {
+            copyBtn.addEventListener('click', function () {
+              navigator.clipboard.writeText(key).then(function () {
+                copyBtn.textContent = 'Skopiowano!';
+                setTimeout(function () { copyBtn.textContent = 'Kopiuj'; }, 2000);
+              }, function () {});
+            });
+          }
+        }
+
+        chatContainer.appendChild(messageDiv);
+        scrollToBottom();
+      }
+
+      function dodajWiadomoscPomoc() {
+        hideTypingIndicator();
+        var messageDiv = document.createElement('div');
+        messageDiv.className = 'message bot';
+        messageDiv.innerHTML =
+          '<div class="bubble">' +
+          '<div class="bot-name">Wirtualny asystent</div>' +
+          '<span class="asst-help-intro">Potrzebujesz pomocy? Utwórz ticket na naszym Discordzie:</span>' +
+          '<a class="asst-ticket-btn" href="' + DISCORD_TICKET_URL + '" target="_blank" rel="noopener noreferrer">Utwórz ticket</a>' +
+          '</div>';
+        chatContainer.appendChild(messageDiv);
+        scrollToBottom();
+      }
+
+      function handleBotResponse(text) {
+        if (isKluczCommand(text)) {
+          dodajWiadomoscKlucz();
+          return;
+        }
+        if (isPomocCommand(text)) {
+          dodajWiadomoscPomoc();
+          return;
+        }
+        if (isAktualizacjaCommand(text)) {
+          dodajWiadomosc(
+            'Otwieram okno aktualizacji — to samo co w Więcej → Oceń aplikację → Aktualizuj.',
+            'bot',
+          );
+          setTimeout(function () {
+            if (typeof showSwResetModal === 'function') showSwResetModal();
+          }, 400);
+          return;
+        }
+        if (is67Command(text)) {
+          openCmd67Overlay();
+          return;
+        }
+        if (isAdminCommand(text)) {
+          openCmdAdminOverlay();
+          return;
+        }
+        if (isDaneCommand(text)) {
+          dodajWiadomosc(
+            'Otwieram edytor danych — przesuń panel od dołu, edytuj pola lub zmień zdjęcie.',
+            'bot',
+          );
+          setTimeout(openDaneEditor, 300);
+          return;
+        }
+        if (isKreatorCommand(text)) {
+          if (window.AssistantKreator) AssistantKreator.start();
+          return;
+        }
+        if (isPokazCommand(text)) {
+          dodajWiadomosc(
+            'Otwieram listę zapisanych danych — możesz skopiować pojedyncze pole lub przenieść dane między kartami.',
+            'bot',
+          );
+          setTimeout(function () {
+            if (window.AssistantPokaz) AssistantPokaz.open();
+          }, 300);
+          return;
+        }
+        var botReply = getBotReply(text);
+        if (botReply) dodajWiadomosc(botReply, 'bot');
+      }
+
+      function renderCommandsList() {
+        var list = document.getElementById('commands-list');
+        if (!list) return;
+        list.innerHTML = '';
+        ASSISTANT_COMMANDS.forEach(function (item) {
+          var li = document.createElement('li');
+          var btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'commands-list__item';
+          btn.innerHTML =
+            '<span>' + escapeHtml(item.label) + '</span>' +
+            '<span class="commands-list__cmd">' + escapeHtml(item.cmd) + '</span>';
+          btn.addEventListener('click', function () {
+            closeCommandsMenu();
+            runCommand(item.cmd);
+          });
+          li.appendChild(btn);
+          list.appendChild(li);
+        });
+      }
+
+      window.openCommandsMenu = function () {
+        var overlay = document.getElementById('commands-overlay');
+        if (!overlay) return;
+        overlay.classList.add('is-open');
+        overlay.setAttribute('aria-hidden', 'false');
+      };
+
+      window.closeCommandsMenu = function (event) {
+        if (event && event.target && event.target.closest && event.target.closest('.commands-sheet')) {
+          return;
+        }
+        var overlay = document.getElementById('commands-overlay');
+        if (!overlay) return;
+        overlay.classList.remove('is-open');
+        overlay.setAttribute('aria-hidden', 'true');
+      };
+
+      function runCommand(cmd) {
+        if (isKreatorCommand(cmd)) {
+          closeCommandsMenu();
+          dodajWiadomosc(cmd, 'user');
+          if (suggestionBtn && suggestionBtn.style.display !== 'none') {
+            suggestionBtn.style.display = 'none';
+          }
+          scheduleBotReply(function () {
+            if (window.AssistantKreator) AssistantKreator.start();
+          });
+          return;
+        }
+        if (isDaneCommand(cmd)) {
+          closeCommandsMenu();
+          dodajWiadomosc(cmd, 'user');
+          if (suggestionBtn && suggestionBtn.style.display !== 'none') {
+            suggestionBtn.style.display = 'none';
+          }
+          scheduleBotReply(function () {
+            dodajWiadomosc(
+              'Otwieram edytor danych — przesuń panel od dołu, edytuj pola lub zmień zdjęcie.',
+              'bot',
+            );
+            setTimeout(openDaneEditor, 300);
+          });
+          return;
+        }
+        if (isPokazCommand(cmd)) {
+          closeCommandsMenu();
+          dodajWiadomosc(cmd, 'user');
+          if (suggestionBtn && suggestionBtn.style.display !== 'none') {
+            suggestionBtn.style.display = 'none';
+          }
+          scheduleBotReply(function () {
+            dodajWiadomosc(
+              'Otwieram listę zapisanych danych — możesz skopiować pojedyncze pole lub przenieść dane między kartami.',
+              'bot',
+            );
+            setTimeout(function () {
+              if (window.AssistantPokaz) AssistantPokaz.open();
+            }, 300);
+          });
+          return;
+        }
+        input.value = cmd;
+        input.dispatchEvent(new Event('input'));
+        sendMessage();
+      }
+
+      renderCommandsList();
+
+      // Pole wpisywania czatu
+      input.addEventListener('input', function() {
+        this.style.height = 'auto';
+        this.style.height = (this.scrollHeight) + 'px';
+        const length = this.value.length;
+        charCount.textContent = `${length}/500`;
+        if (length > 0) sendBtn.classList.add('active');
+        else sendBtn.classList.remove('active');
+      });
+
+      input.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+          e.preventDefault();
+          sendMessage();
+        }
+      });
+
+      sendBtn.addEventListener('click', sendMessage);
+
+      function sendMessage() {
+        const text = input.value.trim();
+        if (!text) return;
+
+        dodajWiadomosc(text, 'user');
+
+        if (suggestionBtn && suggestionBtn.style.display !== 'none') {
+            suggestionBtn.style.display = 'none';
+        }
+
+        input.value = '';
+        input.style.height = 'auto';
+        charCount.textContent = '0/500';
+        sendBtn.classList.remove('active');
+        scrollToBottom();
+
+        if (window.AssistantKreator && AssistantKreator.isActive()) {
+          AssistantKreator.handleUserMessage(text);
+          return;
+        }
+
+        scheduleBotReply(function () {
+          handleBotResponse(text);
+        });
+      }
+
+      function dodajWiadomosc(text, sender, actions) {
+        if (sender === 'bot') hideTypingIndicator();
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `message ${sender}`;
+        const bubble = document.createElement('div');
+        bubble.className = 'bubble';
+        if (sender === 'bot') {
+          const botName = document.createElement('div');
+          botName.className = 'bot-name';
+          botName.textContent = 'Wirtualny asystent';
+          bubble.appendChild(botName);
+        }
+        const span = document.createElement('span');
+        span.innerHTML = text;
+        bubble.appendChild(span);
+
+        if (sender === 'bot' && actions && actions.length) {
+          const choices = document.createElement('div');
+          choices.className = 'asst-kreator-choices';
+          var utilityStarted = false;
+          actions.forEach(function (action) {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            var className = 'asst-kreator-choice-btn';
+            if (action.ghost) className += ' asst-kreator-choice-btn--ghost';
+            if (action.random) className += ' asst-kreator-choice-btn--random';
+            if (action.utility) {
+              className += ' asst-kreator-choice-btn--utility';
+              if (!utilityStarted) {
+                className += ' asst-kreator-choice-btn--utility-first';
+                utilityStarted = true;
+              }
+            } else {
+              utilityStarted = false;
+            }
+            btn.className = className;
+            btn.textContent = action.label;
+            btn.addEventListener('click', function () {
+              if (btn.disabled) return;
+              document.querySelectorAll('.asst-kreator-choice-btn').forEach(function (b) {
+                b.disabled = true;
+              });
+              if (
+                (action.value === '__random__' || action.value === '__pick_photo__') &&
+                window.AssistantKreator &&
+                AssistantKreator.isActive()
+              ) {
+                AssistantKreator.handleUserMessage(action.value);
+                return;
+              }
+              dodajWiadomosc(action.label, 'user');
+              if (window.AssistantKreator && AssistantKreator.isActive()) {
+                AssistantKreator.handleUserMessage(action.value);
+              }
+            });
+            choices.appendChild(btn);
+          });
+          bubble.appendChild(choices);
+        }
+
+        messageDiv.appendChild(bubble);
+        chatContainer.appendChild(messageDiv);
+        scrollToBottom();
+      }
+
+      function scrollToBottom() {
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+      }
+
+      if (window.AssistantKreator) {
+        AssistantKreator.init({
+          dodajWiadomosc: dodajWiadomosc,
+          scheduleBotReply: scheduleBotReply,
+          botDelay: BOT_REPLY_DELAY_MS,
+          setInputPlaceholder: function (ph) {
+            if (input) input.placeholder = ph;
+          },
+          hideSuggestion: function () {
+            if (suggestionBtn) suggestionBtn.style.display = 'none';
+          },
+        });
+      }
+
+      if (window.AssistantPokaz) {
+        AssistantPokaz.init({
+          onNotify: function (msg) {
+            dodajWiadomosc(msg, 'bot');
+          },
+        });
+      }
+    });
+  </script>
+  <script src="js/theme.js" defer></script>
+  <script src="js/navigation.js" defer></script>
+</body>
+</html>

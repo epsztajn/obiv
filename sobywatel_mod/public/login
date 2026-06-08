@@ -1,0 +1,299 @@
+﻿<!doctype html>
+<html lang="pl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script src="js/theme-init.js"></script>
+    <title>Start</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --bg: linear-gradient(135deg, #eef2ff, #f8fafc 60%, #e2e8f0);
+        --card: #ffffff;
+        --text: #0f172a;
+        --muted: #475569;
+        --shadow: 0 18px 40px rgba(15, 23, 42, 0.12);
+        --spinner-track: #cbd5f5;
+        --spinner: #4338ca;
+        --border: #cbd5e1;
+      }
+      :root[data-theme="dark"] {
+        color-scheme: dark;
+        --bg: linear-gradient(135deg, #0b1220, #111827 60%, #0f172a);
+        --card: #0f172a;
+        --text: #e2e8f0;
+        --muted: #94a3b8;
+        --shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
+        --spinner-track: #1e293b;
+        --spinner: #60a5fa;
+        --border: #1e293b;
+      }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        background: var(--bg);
+        font-family: "Roboto", "Segoe UI", Arial, sans-serif;
+        color: var(--text);
+      }
+      .card {
+        width: min(92vw, 420px);
+        background: var(--card);
+        border-radius: 16px;
+        padding: 28px;
+        box-shadow: var(--shadow);
+        text-align: center;
+      }
+      .title {
+        margin: 0 0 8px;
+        font-size: 22px;
+        font-weight: 700;
+      }
+      .status {
+        margin: 0;
+        font-size: 15px;
+        color: var(--muted);
+      }
+      .spinner {
+        margin: 16px auto 0;
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        border: 3px solid var(--spinner-track);
+        border-top-color: var(--spinner);
+        animation: spin 0.8s linear infinite;
+      }
+      .theme-toggle {
+        position: fixed;
+        top: 16px;
+        right: 16px;
+        padding: 8px 12px;
+        border-radius: 999px;
+        border: 1px solid var(--border);
+        background: var(--card);
+        color: var(--text);
+        font-size: 12px;
+        font-weight: 700;
+        cursor: pointer;
+      }
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+    </style>
+    <link rel="manifest" href="manifest.json" />
+    <link rel="stylesheet" href="css/guard.css" />
+    <script src="js/guard.js" defer></script>
+    <script src="js/theme.js" defer></script>
+  </head>
+  <body>
+    <div id="jsGuard" class="guard-overlay" role="status" aria-live="polite" hidden>
+      <div class="guard-card"></div>
+    </div>
+    <button id="themeToggle" class="theme-toggle" type="button" aria-pressed="false">
+      Tryb: Jasny
+    </button>
+    <main class="card">
+      <h1 class="title">Start aplikacji</h1>
+      <p id="status" class="status">Sprawdzanie dostepu...</p>
+      <div class="spinner" aria-hidden="true"></div>
+    </main>
+
+    <script>
+      const DB_NAME = "access-control";
+      const STORE_NAME = "auth";
+      const DEVICE_KEY = "device-id";
+      const CLIENT_LIMITS = {
+        "POST /api/validate": { windowMs: 60 * 1000, max: 10 },
+        default: { windowMs: 60 * 1000, max: 30 },
+      };
+      const clientBuckets = new Map();
+
+      const themeToggle = document.getElementById("themeToggle");
+
+      function getCurrentTheme() {
+        return document.documentElement.getAttribute("data-theme") === "dark" ? "dark" : "light";
+      }
+
+      function applyTheme(mode) {
+        if (window.Theme && typeof window.Theme.setMode === "function") {
+          window.Theme.setMode(mode);
+        } else {
+          try {
+            document.documentElement.setAttribute("data-theme", mode);
+            localStorage.setItem("theme-preference", mode);
+          } catch (_) {}
+        }
+        updateThemeToggle();
+      }
+
+      function updateThemeToggle() {
+        const mode = getCurrentTheme();
+        if(themeToggle) {
+            themeToggle.textContent = mode === "dark" ? "Tryb: Ciemny" : "Tryb: Jasny";
+            themeToggle.setAttribute("aria-pressed", mode === "dark");
+        }
+      }
+
+      function normalizeRatePath(pathname) {
+        return pathname.replace(/\/\d+(?=\/|$)/g, "/:id");
+      }
+
+      function checkClientRateLimit(path, method) {
+        const normalized = normalizeRatePath(path);
+        const key = `${method} ${normalized}`;
+        const config = CLIENT_LIMITS[key] || CLIENT_LIMITS.default;
+        const now = Date.now();
+        let bucket = clientBuckets.get(key);
+        if (!bucket || now > bucket.resetAt) {
+          bucket = { count: 0, resetAt: now + config.windowMs };
+          clientBuckets.set(key, bucket);
+        }
+        if (bucket.count >= config.max) {
+          return false;
+        }
+        bucket.count += 1;
+        return true;
+      }
+
+      function createDeviceId() {
+        if (window.crypto && window.crypto.getRandomValues) {
+          const bytes = new Uint8Array(16);
+          window.crypto.getRandomValues(bytes);
+          return Array.from(bytes).map((b) => b.toString(16).padStart(2, "0")).join("");
+        }
+        return `${Date.now().toString(16)}${Math.random().toString(16).slice(2, 10)}`;
+      }
+
+      function getDeviceId() {
+        try {
+          const stored = localStorage.getItem(DEVICE_KEY);
+          if (stored && /^[a-f0-9-]{16,64}$/i.test(stored)) {
+            return stored;
+          }
+        } catch (_) {}
+        const fresh = createDeviceId();
+        try {
+          localStorage.setItem(DEVICE_KEY, fresh);
+        } catch (_) {}
+        return fresh;
+      }
+
+      function openDb() {
+        return new Promise((resolve, reject) => {
+          const request = indexedDB.open(DB_NAME, 1);
+          request.onupgradeneeded = () => {
+            request.result.createObjectStore(STORE_NAME);
+          };
+          request.onsuccess = () => resolve(request.result);
+          request.onerror = () => reject(request.error);
+        });
+      }
+
+      async function getStoredHash() {
+        const db = await openDb();
+        return new Promise((resolve, reject) => {
+          const tx = db.transaction(STORE_NAME, "readonly");
+          const store = tx.objectStore(STORE_NAME);
+          const getReq = store.get("hash");
+          getReq.onsuccess = () => resolve(getReq.result || null);
+          getReq.onerror = () => reject(getReq.error);
+        });
+      }
+
+      async function clearStoredHash() {
+        const db = await openDb();
+        return new Promise((resolve, reject) => {
+          const tx = db.transaction(STORE_NAME, "readwrite");
+          const store = tx.objectStore(STORE_NAME);
+          const delReq = store.delete("hash");
+          delReq.onsuccess = () => resolve();
+          delReq.onerror = () => reject(delReq.error);
+        });
+      }
+
+      async function validateHash(hash) {
+        const endpoint = "/api/validate";
+        if (!checkClientRateLimit(endpoint, "POST")) {
+          throw new Error("CLIENT_RATE_LIMIT");
+        }
+        const response = await fetch(endpoint, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "same-origin",
+          body: JSON.stringify({ hash, deviceId: getDeviceId() }),
+        });
+        let data = null;
+        try {
+          data = await response.json();
+        } catch (err) {
+          data = null;
+        }
+        if (!response.ok) {
+          if (response.status === 429) {
+            throw new Error("RATE_LIMITED");
+          }
+          if (data && data.error) {
+            throw new Error(data.error);
+          }
+          return false;
+        }
+        return data && data.valid === true;
+      }
+
+      if(themeToggle) {
+          themeToggle.addEventListener("click", () => {
+            const nextMode = getCurrentTheme() === "dark" ? "light" : "dark";
+            applyTheme(nextMode);
+          });
+      }
+
+      updateThemeToggle();
+
+      async function startAccessFlow() {
+        const statusEl = document.getElementById("status");
+        try {
+          const hash = await getStoredHash();
+          if (!hash) {
+            window.location.replace("/activate.html");
+            return;
+          }
+          statusEl.textContent = "Weryfikacja dostepu...";
+          const ok = await validateHash(hash);
+          if (ok) {
+            window.location.replace("/login.html");
+            return;
+          }
+          await clearStoredHash();
+          window.location.replace("/activate.html");
+        } catch (err) {
+          if (err && (err.message === "CLIENT_RATE_LIMIT" || err.message === "RATE_LIMITED")) {
+            statusEl.textContent = "Za duzo prob. Sprobuj pozniej.";
+            return;
+          }
+          if (err && err.message === "KEY_ALREADY_USED") {
+            statusEl.textContent = "Klucz zostal juz uzyty. Skontaktuj sie z administratorem.";
+            return;
+          }
+          statusEl.textContent = "Blad weryfikacji. Sprobuj ponownie.";
+        }
+      }
+
+      function scheduleAccessFlow() {
+        if (window.GuardApi && typeof window.GuardApi.onAccessGranted === "function") {
+          window.GuardApi.onAccessGranted(startAccessFlow);
+          return;
+        }
+        startAccessFlow();
+      }
+
+      if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", scheduleAccessFlow, { once: true });
+      } else {
+        scheduleAccessFlow();
+      }
+    </script>
+  <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a0820c0e2b1a1c02',t:'MTc4MDg2MDM3Mg=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>

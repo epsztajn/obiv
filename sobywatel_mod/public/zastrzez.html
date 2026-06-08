@@ -1,0 +1,294 @@
+<!doctype html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <meta name="color-scheme" content="light dark" />
+    <script src="js/theme-init.js"></script>
+    <title>Zastrzeż dokument</title>
+
+    <link rel="stylesheet" href="css/theme.css" />
+    <link rel="stylesheet" href="css/service-subpage.css" />
+
+    <link rel="preload" href="assets/fonts/roboto_400_latinext.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="assets/fonts/roboto_500_latinext.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="assets/fonts/roboto_700_latinext.woff2" as="font" type="font/woff2" crossorigin />
+
+    <style>
+        @font-face {
+            font-family: 'Roboto';
+            src: url('assets/fonts/roboto_400_latinext.woff2') format('woff2');
+            font-weight: 400;
+            font-style: normal;
+        }
+        @font-face {
+            font-family: 'Roboto';
+            src: url('assets/fonts/roboto_500_latinext.woff2') format('woff2');
+            font-weight: 500;
+            font-style: normal;
+        }
+        @font-face {
+            font-family: 'Roboto';
+            src: url('assets/fonts/roboto_700_latinext.woff2') format('woff2');
+            font-weight: 700;
+            font-style: normal;
+        }
+
+        :root {
+            --bg-color: #f4f5f8;
+            --card-bg: #ffffff;
+            --text-main: #000000;
+            --text-secondary: #5e5e62;
+            --text-blue: #0b51a1;
+            --icon-bg: #e9e9ff;
+            --icon-color: #6c5ce7;
+            --border-color: #e5e5ea;
+            --info-bg: #e1f0ff;
+        }
+
+        :root[data-theme="dark"] {
+            --bg-color: #101317;
+            --card-bg: #1f2328;
+            --text-main: #ffffff;
+            --text-secondary: #a1a1a6;
+            --border-color: #38383a;
+            --icon-bg: #2c2c3e;
+            --icon-color: #8c78f0;
+            --text-blue: #409cff;
+            --info-bg: #1a2a3a;
+        }
+
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+            margin: 0;
+            padding: 0;
+        }
+
+        html,
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+        }
+
+        body {
+            font-family: 'Roboto', -apple-system, sans-serif;
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+            min-height: 100dvh;
+        }
+
+        .app-container {
+            width: 100%;
+            max-width: 400px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            padding: 16px 20px;
+            background-color: var(--bg-color);
+            position: relative; /* Dodane position relative dla nagłówka */
+        }
+
+        .back-btn {
+            display: flex;
+            align-items: center;
+            text-decoration: none;
+            color: var(--text-blue);
+            font-size: 17px;
+            font-weight: 400; /* Dodane dla pewności */
+            cursor: pointer;
+            z-index: 10; /* Przenosi przycisk ponad tytuł */
+            position: relative;
+            margin-left: -16px; /* Przesuwa przycisk mocniej do lewej krawędzi */
+            padding: 8px; /* Zwiększa obszar kliknięcia dla palca */
+        }
+
+        .back-btn svg {
+            width: 24px;
+            height: 24px;
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 2.2;
+            margin-right: 2px;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .header-title {
+            position: absolute; /* Użycie absolutnego pozycjonowania dla tytułu */
+            width: 100%;
+            text-align: center;
+            left: 0;
+            font-weight: 600;
+            font-size: 17px;
+            pointer-events: none; /* Zapobiega blokowaniu kliknięć przez tytuł */
+        }
+
+        .main-content {
+            padding: 24px 20px;
+        }
+
+        .icon-circle {
+            width: 84px;
+            height: 84px;
+            background-color: var(--icon-bg);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 24px;
+        }
+
+        .icon-circle svg {
+            width: 42px;
+            height: 42px;
+            fill: var(--icon-color);
+        }
+
+        .title {
+            font-size: 32px;
+            font-weight: 700;
+            line-height: 1.1;
+            margin-bottom: 16px;
+            letter-spacing: -0.5px;
+        }
+
+        .description {
+            font-size: 16px;
+            line-height: 1.4;
+            color: var(--text-secondary);
+            margin-bottom: 32px;
+        }
+
+        /* --- Lista dokumentów --- */
+        .doc-list {
+            background-color: var(--card-bg);
+            border-radius: 16px;
+            overflow: hidden;
+            margin-bottom: 24px;
+        }
+
+        .doc-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 18px 20px;
+            text-decoration: none;
+            color: var(--text-main);
+            border-bottom: 1px solid var(--border-color);
+            transition: background 0.2s;
+        }
+
+        .doc-item:last-child {
+            border-bottom: none;
+        }
+
+        .doc-item:active {
+            background-color: rgba(0,0,0,0.05);
+        }
+
+        .doc-name {
+            font-size: 17px;
+            font-weight: 600;
+        }
+
+        .chevron {
+            width: 20px;
+            height: 20px;
+            color: #c7c7cc;
+        }
+
+        /* --- Info Box --- */
+        .info-box {
+            background-color: var(--info-bg);
+            border-radius: 16px;
+            padding: 16px;
+            display: flex;
+            gap: 12px;
+        }
+
+        .info-icon-circle {
+            width: 24px;
+            height: 24px;
+            background-color: var(--text-blue);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .info-text {
+            font-size: 13px;
+            line-height: 1.5;
+            color: #333;
+        }
+
+        :root[data-theme="dark"] .info-text {
+            color: #ccc;
+        }
+
+    </style>
+</head>
+<body class="service-subpage">
+
+<div class="app-container">
+    <header class="header service-header">
+        <a href="services.html" class="back-btn">
+            <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"></polyline></svg>
+            Wróć
+        </a>
+        <div class="header-title">Zastrzeż dokument</div>
+        <div class="service-header__slot" aria-hidden="true"></div>
+    </header>
+
+    <main class="main-content">
+        <div class="icon-circle">
+            <svg viewBox="0 0 24 24">
+                <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/>
+                <circle cx="17.5" cy="17.5" r="3.5" fill="#f00" fill-opacity="0.1"/>
+                <text x="16" y="20" font-family="Arial" font-size="6" fill="var(--icon-color)" font-weight="bold">!</text>
+            </svg>
+        </div>
+
+        <h1 class="title">Zastrzeż utracony dokument w bankach i innych firmach</h1>
+        
+        <p class="description">
+            Skorzystaj z usługi, jeśli Twój dokument zaginął lub ktoś nieuprawniony wykorzystał Twoje dane. Zastrzeżenie można cofnąć.
+        </p>
+
+        <div class="doc-list">
+            <a href="#" class="doc-item">
+                <span class="doc-name">Dowód osobisty</span>
+                <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+            </a>
+            <a href="#" class="doc-item">
+                <span class="doc-name">Paszport</span>
+                <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+            </a>
+            <a href="#" class="doc-item">
+                <span class="doc-name">Prawo jazdy</span>
+                <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+            </a>
+        </div>
+
+        <div class="info-box">
+            <div class="info-icon-circle">i</div>
+            <div class="info-text">
+                Zgłoszenie trafi do Systemu Dokumenty Zastrzeżone Związku Banków Polskich. To ogólnopolska baza zgubionych i skradzionych dokumentów. Korzystają z niej banki, operatorzy komórkowi oraz inne firmy i instytucje.
+            </div>
+        </div>
+    </main>
+</div>
+
+<script src="js/theme.js" defer></script>
+</body>
+</html>

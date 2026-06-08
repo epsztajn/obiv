@@ -1,0 +1,286 @@
+<!doctype html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <meta name="color-scheme" content="light dark" />
+    <script src="js/theme-init.js"></script>
+    <title>Sprawdź dowód</title>
+
+    <link rel="stylesheet" href="css/theme.css" />
+    <link rel="stylesheet" href="css/service-subpage.css" />
+
+    <link rel="preload" href="assets/fonts/roboto_400_latinext.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="assets/fonts/roboto_500_latinext.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="assets/fonts/roboto_700_latinext.woff2" as="font" type="font/woff2" crossorigin />
+
+    <style>
+        @font-face {
+            font-family: 'Roboto';
+            src: url('assets/fonts/roboto_400_latinext.woff2') format('woff2');
+            font-weight: 400;
+            font-style: normal;
+        }
+        @font-face {
+            font-family: 'Roboto';
+            src: url('assets/fonts/roboto_500_latinext.woff2') format('woff2');
+            font-weight: 500;
+            font-style: normal;
+        }
+        @font-face {
+            font-family: 'Roboto';
+            src: url('assets/fonts/roboto_700_latinext.woff2') format('woff2');
+            font-weight: 700;
+            font-style: normal;
+        }
+
+        :root {
+            --bg-color: #f4f5f8;
+            --card-bg: #ffffff;
+            --text-main: #000000;
+            --text-secondary: #5e5e62;
+            --text-blue: #1c5ff0;
+            --icon-bg: #ead8fa;
+            --icon-color: #a45ad6;
+            --input-border: #8e8e93;
+        }
+
+        :root[data-theme="dark"] {
+            --bg-color: #101317;
+            --card-bg: #1f2328;
+            --text-main: #ffffff;
+            --text-secondary: #a1a1a6;
+            --text-blue: #409cff;
+            --icon-bg: #321d45;
+            --icon-color: #ba75e8;
+            --input-border: #48484a;
+        }
+
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+            margin: 0;
+            padding: 0;
+        }
+
+        html,
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+        }
+
+        body {
+            font-family: 'Roboto', -apple-system, sans-serif;
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+            min-height: 100dvh;
+            overflow-x: hidden;
+        }
+
+        .app-container {
+            width: 100%;
+            max-width: 400px;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            min-height: 100dvh; /* Zmiana na dvh */
+            position: relative;
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            padding: 16px 20px;
+            background-color: var(--bg-color);
+            position: relative;
+            min-height: 56px;
+            z-index: 5;
+        }
+
+        .back-btn {
+            display: flex;
+            align-items: center;
+            text-decoration: none;
+            color: var(--text-blue);
+            font-size: 17px;
+            font-weight: 400;
+            cursor: pointer;
+            z-index: 10;
+            position: relative;
+            margin-left: -16px;
+            padding: 8px;
+        }
+
+        .back-btn svg {
+            width: 24px;
+            height: 24px;
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 2.2;
+            margin-right: 2px;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .header-title {
+            position: absolute;
+            width: 100%;
+            text-align: center;
+            left: 0;
+            font-weight: 600;
+            font-size: 17px;
+            pointer-events: none;
+        }
+
+        .main-content {
+            padding: 24px 20px;
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+        }
+
+        .icon-circle {
+            width: 64px;
+            height: 64px;
+            background-color: var(--icon-bg);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 24px;
+        }
+
+        .icon-circle svg {
+            width: 32px;
+            height: 32px;
+        }
+
+        .title {
+            font-size: 30px;
+            font-weight: 700;
+            line-height: 1.15;
+            margin-bottom: 12px;
+            letter-spacing: -0.5px;
+        }
+
+        .description {
+            font-size: 15px;
+            line-height: 1.45;
+            color: var(--text-secondary);
+            margin-bottom: 32px;
+        }
+
+        .input-card {
+            background-color: var(--card-bg);
+            border-radius: 16px;
+            padding: 16px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+            margin-bottom: 24px;
+        }
+
+        .input-label {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        .input-field {
+            width: 100%;
+            height: 52px;
+            border: 1px solid var(--input-border);
+            border-radius: 6px;
+            background-color: transparent;
+            font-size: 16px;
+            color: var(--text-main);
+            padding: 0 12px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .input-field:focus {
+            border-color: var(--text-blue);
+        }
+
+        .spacer {
+            flex-grow: 1;
+            min-height: 32px;
+        }
+
+        .bottom-action {
+            /* Bezpieczny odstęp uwzględniający paski nawigacyjne Android/iOS */
+            padding-bottom: calc(24px + env(safe-area-inset-bottom, 0px)); 
+        }
+
+        .btn-primary {
+            width: 100%;
+            background-color: var(--text-blue);
+            color: #ffffff;
+            border: none;
+            border-radius: 28px;
+            padding: 16px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        .btn-primary:active {
+            opacity: 0.8;
+        }
+
+    </style>
+</head>
+<body class="service-subpage">
+
+<div class="app-container">
+    <header class="header service-header">
+        <a href="services.html" class="back-btn">
+            <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"></polyline></svg>
+            Usługi
+        </a>
+        <div class="header-title">Sprawdź dowód</div>
+        <div class="service-header__slot" aria-hidden="true"></div>
+    </header>
+
+    <main class="main-content">
+        <div class="icon-circle">
+            <svg viewBox="0 0 24 24">
+                <path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h8.5c-.3-.6-.5-1.3-.5-2 0-3.3 2.7-6 6-6 1.3 0 2.4.4 3.4 1V6c0-1.1-.9-2-2-2z" fill="var(--icon-color)"/>
+                
+                <circle cx="8" cy="10" r="2.5" fill="var(--icon-bg)" />
+                <path d="M12 16c0-1.7-2.7-2.5-4-2.5S4 14.3 4 16v1h8v-1z" fill="var(--icon-bg)"/>
+                <rect x="14" y="8" width="4" height="1.5" rx="0.75" fill="var(--icon-bg)"/>
+                <rect x="14" y="11" width="3" height="1.5" rx="0.75" fill="var(--icon-bg)"/>
+                
+                <circle cx="18" cy="18" r="6" fill="var(--icon-bg)"/>
+                
+                <circle cx="18" cy="18" r="5" fill="var(--icon-color)"/>
+                <path d="M15.5 18l-1.5-1.5-1 1 2.5 2.5 5-5-1-1-4 4z" fill="var(--icon-bg)"/>
+            </svg>
+        </div>
+
+        <h1 class="title">Sprawdź, czy dowód jest unieważniony lub zawieszony</h1>
+        
+        <p class="description">
+            Możesz sprawdzić dowód osobisty swój lub innej osoby.
+        </p>
+
+        <div class="input-card">
+            <label class="input-label" for="dowod-input">Seria i numer dowodu</label>
+            <input type="text" id="dowod-input" class="input-field" placeholder="">
+        </div>
+
+        <div class="spacer"></div>
+
+        <div class="bottom-action">
+            <button class="btn-primary">Sprawdź dowód</button>
+        </div>
+    </main>
+
+</div>
+
+<script src="js/theme.js" defer></script>
+</body>
+</html>

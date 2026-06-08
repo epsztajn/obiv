@@ -1,0 +1,858 @@
+<!doctype html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    
+    <meta name="color-scheme" content="light dark" />
+    <script src="js/theme-init.js"></script>
+    <title>Zastrzeż PESEL</title>
+
+    <link rel="stylesheet" href="css/theme.css" />
+    <link rel="stylesheet" href="css/service-subpage.css" />
+
+    <link rel="preload" href="assets/fonts/roboto_400_latinext.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="assets/fonts/roboto_500_latinext.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="assets/fonts/roboto_700_latinext.woff2" as="font" type="font/woff2" crossorigin />
+
+    <style>
+        @font-face {
+            font-family: 'Roboto';
+            src: url('assets/fonts/roboto_400_latinext.woff2') format('woff2');
+            font-weight: 400;
+            font-style: normal;
+        }
+        @font-face {
+            font-family: 'Roboto';
+            src: url('assets/fonts/roboto_500_latinext.woff2') format('woff2');
+            font-weight: 500;
+            font-style: normal;
+        }
+        @font-face {
+            font-family: 'Roboto';
+            src: url('assets/fonts/roboto_700_latinext.woff2') format('woff2');
+            font-weight: 700;
+            font-style: normal;
+        }
+
+        /* --- DOMYŚLNY MOTYW (JASNY) --- */
+        :root {
+            --bg-color: #f4f5f8;
+            --card-bg: #ffffff;
+            --text-main: #1a1a1a;
+            --text-secondary: #5e5e62;
+            --text-blue: #0b51a1;
+            --icon-bg: #dbe0f9;
+            --icon-color: #554497;
+            --border-color: #e5e5ea;
+            --modal-overlay: rgba(0, 0, 0, 0.4);
+            --segmented-bg: #e9e9ea;
+            --slider-bg: #e9e9ea;
+        }
+
+        /* --- NATYWNY MOTYW CIEMNY (REAGUJE NA USTAWIENIA TELEFONU) --- */
+        :root[data-theme="dark"] {
+            --bg-color: #101317;
+            --card-bg: #1f2328;
+            --text-main: #ffffff;
+            --text-secondary: #a1a1a6;
+            --border-color: #38383a;
+            --icon-bg: #2c2c3e;
+            --icon-color: #8c78f0;
+            --text-blue: #409cff;
+            --segmented-bg: #2c2c2e;
+            --slider-bg: #39393d;
+        }
+
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: 'Roboto', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        .app-container {
+            width: 100%;
+            max-width: 400px;
+            background-color: var(--bg-color);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* --- WIDOKI (Views) --- */
+        .view-section {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            min-height: 100vh;
+            transition: transform 0.3s ease, opacity 0.3s ease;
+        }
+
+        .view-hidden {
+            display: none !important;
+        }
+
+        /* --- WSPÓLNY HEADER --- */
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 20px;
+            position: relative;
+            min-height: 56px;
+            background-color: var(--bg-color);
+        }
+
+        .back-btn {
+            display: flex;
+            align-items: center;
+            text-decoration: none;
+            color: var(--text-blue);
+            font-size: 17px;
+            font-weight: 400;
+            z-index: 2;
+            flex: 1;
+            margin-left: -6px;
+            cursor: pointer;
+        }
+
+        .back-btn svg {
+            width: 24px;
+            height: 24px;
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 2.2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            margin-right: 2px;
+        }
+
+        .header-title {
+            position: absolute;
+            width: 100%;
+            text-align: center;
+            left: 0;
+            font-weight: 600;
+            font-size: 17px;
+            color: var(--text-main);
+            pointer-events: none;
+        }
+
+        .help-btn {
+            flex: 1;
+            display: flex;
+            justify-content: flex-end;
+            z-index: 2;
+            cursor: pointer;
+        }
+
+        .help-btn svg {
+            width: 22px;
+            height: 22px;
+            color: var(--text-secondary);
+        }
+
+        /* --- WIDOK GŁÓWNY (Zastrzeż PESEL) --- */
+        .main-content {
+            padding: 24px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .shield-wrapper {
+            width: 84px;
+            height: 84px;
+            background-color: var(--icon-bg);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 24px;
+        }
+
+        .shield-wrapper svg {
+            width: 36px;
+            height: 36px;
+            fill: var(--icon-color);
+        }
+
+        .status-heading {
+            font-size: 26px;
+            font-weight: 700;
+            line-height: 1.25;
+            text-align: center;
+            color: var(--text-main);
+            margin-bottom: 16px;
+            letter-spacing: -0.3px;
+        }
+
+        .status-subheading {
+            font-size: 15px;
+            line-height: 1.45;
+            text-align: center;
+            color: var(--text-secondary);
+            margin-bottom: 32px;
+            max-width: 320px;
+        }
+
+        .toggle-card {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            margin-bottom: 32px;
+        }
+
+        .toggle-text {
+            font-size: 16px;
+            font-weight: 500;
+            color: var(--text-main);
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 51px;
+            height: 31px;
+        }
+
+        .switch input { opacity: 0; width: 0; height: 0; }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: var(--slider-bg);
+            transition: .3s;
+            border-radius: 31px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 27px; width: 27px;
+            left: 2px; bottom: 2px;
+            background-color: white;
+            transition: .3s;
+            border-radius: 50%;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+        }
+
+        input:checked + .slider { background-color: var(--text-blue); }
+        input:checked + .slider:before { transform: translateX(20px); }
+
+        .info-block {
+            display: none;
+            align-items: flex-start;
+            gap: 12px;
+            margin-bottom: 32px;
+            width: 100%;
+            padding: 0 4px;
+        }
+
+        .info-block.active { display: flex; }
+
+        .info-icon {
+            width: 20px; height: 20px;
+            color: var(--text-secondary);
+            flex-shrink: 0; margin-top: 1px;
+        }
+
+        .info-text {
+            font-size: 14px; line-height: 1.4; color: var(--text-main);
+        }
+
+        .history-container { width: 100%; display: flex; flex-direction: column; }
+        
+        .history-header {
+            font-size: 18px; font-weight: 600; color: var(--text-main);
+            margin-bottom: 16px; padding-left: 2px;
+        }
+
+        .history-item {
+            background-color: var(--card-bg); border-radius: 12px;
+            padding: 16px 20px; display: flex; justify-content: space-between;
+            align-items: center; margin-bottom: 12px; text-decoration: none;
+            cursor: pointer;
+        }
+
+        .history-item-left { display: flex; flex-direction: column; gap: 4px; }
+        .history-item-title { font-size: 15px; font-weight: 500; color: var(--text-main); }
+        .history-item-date { font-size: 13px; color: var(--text-secondary); }
+        
+        .history-chevron {
+            width: 20px; height: 20px; color: #8e8e93; stroke-width: 2;
+        }
+
+        /* --- WIDOK HISTORII (Historia) --- */
+        .segmented-control {
+            display: flex;
+            background-color: var(--segmented-bg);
+            border-radius: 8px;
+            padding: 2px;
+            margin: 0 20px 24px;
+        }
+
+        .segment-btn {
+            flex: 1;
+            padding: 8px 0;
+            text-align: center;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-main);
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .segment-btn.active {
+            background-color: var(--card-bg);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .history-tab-content {
+            display: none;
+            flex-direction: column;
+            width: 100%;
+        }
+
+        .history-tab-content.active {
+            display: flex;
+        }
+
+        .history-description {
+            padding: 0 20px;
+            font-size: 15px;
+            line-height: 1.45;
+            color: var(--text-main);
+            margin-bottom: 24px;
+        }
+        
+        .history-description p { margin-bottom: 16px; }
+
+        .dropdown-section {
+            padding: 0 20px;
+            margin-bottom: 32px;
+        }
+
+        .dropdown-label {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        .dropdown-box {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 14px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 15px;
+            color: var(--text-main);
+            cursor: pointer;
+        }
+
+        .history-list {
+            padding: 0 20px 24px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .date-header {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-main);
+            margin-bottom: 12px;
+        }
+
+        .entry-card {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+            margin-bottom: 12px;
+        }
+
+        .tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 4px 10px;
+            font-size: 12px;
+            color: var(--text-secondary);
+            align-self: flex-start;
+        }
+
+        .tag-dot { width: 8px; height: 8px; border-radius: 50%; }
+        .tag-dot.blue { background-color: #007aff; }
+        .tag-dot.orange { background-color: #f59e0b; }
+        .tag-dot.green { background-color: #34c759; }
+
+        .entry-main {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .entry-details { display: flex; flex-direction: column; gap: 4px; }
+        .entry-title { font-size: 16px; font-weight: 500; color: var(--text-main); }
+        .entry-subtitle { font-size: 14px; color: var(--text-secondary); }
+        .entry-subtitle span { font-weight: 500; color: var(--text-main); }
+
+        .entry-details-full { display: flex; flex-direction: column; gap: 8px; width: 100%; }
+        .entry-subtitle-large { font-size: 15px; color: var(--text-main); }
+
+        /* --- MODALE --- */
+        .overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: var(--modal-overlay);
+            z-index: 999;
+            display: flex; align-items: flex-end; justify-content: center;
+            opacity: 0; pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .overlay.active { opacity: 1; pointer-events: auto; }
+
+        .bottom-sheet {
+            background-color: var(--bg-color);
+            width: 100%;
+            max-width: 400px;
+            border-radius: 20px 20px 0 0;
+            padding: 0 20px 30px 20px;
+            transform: translateY(100%);
+            transition: transform 0.3s cubic-bezier(0.1, 0.8, 0.2, 1);
+            display: flex; flex-direction: column;
+        }
+
+        .overlay.active .bottom-sheet { transform: translateY(0); }
+
+        .sheet-handle-wrap { display: flex; justify-content: center; padding: 10px 0; }
+        .sheet-handle { width: 36px; height: 4px; background: #d1d1d6; border-radius: 2px; }
+
+        .sheet-header {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .sheet-title { font-weight: 600; font-size: 17px; color: var(--text-main); flex: 1; text-align: center; }
+        .sheet-close { color: var(--text-blue); background: none; border: none; font-size: 16px; cursor: pointer; }
+
+        .radio-card {
+            background-color: var(--card-bg); border-radius: 12px;
+            padding: 8px 16px; margin-bottom: 24px;
+        }
+
+        .radio-row {
+            display: flex; align-items: center; padding: 14px 0;
+            border-bottom: 1px solid var(--border-color); cursor: pointer;
+        }
+
+        .radio-row:last-child { border-bottom: none; }
+        .radio-input { display: none; }
+
+        .radio-circle {
+            width: 22px; height: 22px; border-radius: 50%;
+            border: 2px solid #c7c7cc; margin-right: 12px;
+            position: relative; box-sizing: border-box;
+        }
+
+        .radio-input:checked + .radio-circle { border-color: var(--text-blue); }
+        .radio-input:checked + .radio-circle::after {
+            content: ""; position: absolute;
+            top: 4px; left: 4px; width: 10px; height: 10px;
+            background: var(--text-blue); border-radius: 50%;
+        }
+
+        .radio-title { font-size: 15px; color: var(--text-main); }
+
+        .btn-primary {
+            background-color: var(--text-blue); color: white; border: none;
+            border-radius: 24px; padding: 16px; font-size: 16px; font-weight: 500;
+            width: 100%; cursor: pointer;
+        }
+
+        /* --- OKIENKO POMOCY (TEST) --- */
+        .help-modal-overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: var(--modal-overlay);
+            z-index: 1000;
+            display: flex; align-items: center; justify-content: center;
+            opacity: 0; pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .help-modal-overlay.active { opacity: 1; pointer-events: auto; }
+
+        .help-modal-content {
+            background-color: var(--card-bg);
+            padding: 32px 24px;
+            border-radius: 16px;
+            width: 85%;
+            max-width: 320px;
+            text-align: center;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            transform: scale(0.95);
+            transition: transform 0.3s ease;
+        }
+
+        .help-modal-overlay.active .help-modal-content { transform: scale(1); }
+
+        .help-modal-text {
+            font-size: 18px;
+            font-weight: 500;
+            color: var(--text-main);
+            margin-bottom: 24px;
+        }
+    </style>
+</head>
+<body class="service-subpage">
+
+<div class="app-container">
+
+    <section id="viewMain" class="view-section">
+        <header class="header service-header">
+            <a href="dowod.html" class="back-btn">
+                <svg viewBox="0 0 24 24">
+                    <polyline points="15 18 9 12 15 6"></polyline>
+                </svg>
+                Wróć
+            </a>
+            <div class="header-title">Zastrzeż PESEL</div>
+            <div class="help-btn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                    <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                </svg>
+            </div>
+        </header>
+
+        <main class="main-content">
+            <div class="shield-wrapper">
+                <svg viewBox="0 0 24 24">
+                    <path d="M12 2L4 5v6.09c0 5.05 3.41 9.76 8 10.91 4.59-1.15 8-5.86 8-10.91V5l-8-3z" fill="currentColor"/>
+                    <path d="M14 10.5V9c0-1.1-.9-2-2-2s-2 .9-2 2v1.5H9V15h6v-4.5h-1zm-2 3c-.4 0-.75-.35-.75-.75S11.6 12 12 12s.75.35.75.75-.35.75-.75.75zm1-3h-2V9c0-.55.45-1 1-1s1 .45 1 1v1.5z" fill="#fff"/>
+                </svg>
+            </div>
+
+            <h1 class="status-heading" id="statusHeading">Twój PESEL jest<br>niezastrzeżony</h1>
+            
+            <p class="status-subheading" id="statusSubheading">
+                Możesz go zastrzec już teraz. Firmy i<br>instytucje będą miały obowiązek<br>sprawdzać status numeru PESEL od<br>czerwca 2024 roku.
+            </p>
+
+            <div class="toggle-card">
+                <span class="toggle-text">Zastrzeż PESEL</span>
+                <label class="switch">
+                    <input type="checkbox" id="peselToggle">
+                    <span class="slider"></span>
+                </label>
+            </div>
+
+            <div class="info-block" id="infoBlock">
+                <svg class="info-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="16" x2="12" y2="12"></line>
+                    <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                </svg>
+                <div class="info-text">
+                    Po każdym cofnięciu zastrzeżenia numeru PESEL nie możesz skorzystać z usługi przez 30 minut.
+                </div>
+            </div>
+
+            <div class="history-container">
+                <div class="history-header">Historia</div>
+
+                <div class="history-item" onclick="showHistoryView('kto')">
+                    <div class="history-item-left">
+                        <span class="history-item-title">Kto sprawdzał Twój PESEL</span>
+                        <span class="history-item-date">Ostatnia weryfikacja 1.04.2023</span>
+                    </div>
+                    <svg class="history-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="9 18 15 12 9 6"></polyline>
+                    </svg>
+                </div>
+
+                <div class="history-item" onclick="showHistoryView('zmiany')">
+                    <div class="history-item-left">
+                        <span class="history-item-title">Twoje zmiany</span>
+                        <span class="history-item-date">Ostatnia zmiana 1.04.2023</span>
+                    </div>
+                    <svg class="history-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="9 18 15 12 9 6"></polyline>
+                    </svg>
+                </div>
+            </div>
+        </main>
+    </section>
+
+    <section id="viewHistory" class="view-section view-hidden">
+        <header class="header service-header">
+            <div class="back-btn" onclick="hideHistoryView()">
+                <svg viewBox="0 0 24 24">
+                    <polyline points="15 18 9 12 15 6"></polyline>
+                </svg>
+                Wróć
+            </div>
+            <div class="header-title">Historia</div>
+            <div class="help-btn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                    <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                </svg>
+            </div>
+        </header>
+
+        <div class="segmented-control">
+            <button class="segment-btn active" id="btnTabKto" onclick="switchTab('kto')">Kto sprawdzał</button>
+            <button class="segment-btn" id="btnTabZmiany" onclick="switchTab('zmiany')">Twoje zmiany</button>
+        </div>
+
+        <div id="tabKto" class="history-tab-content active">
+            <div class="history-description">
+                <p>Sprawdzisz tu, kiedy ktoś weryfikował Twój PESEL.</p>
+                <p>Jeśli PESEL nie był wtedy zastrzeżony, upewnij się, że to weryfikacja związana na przykład z załatwieniem przez Ciebie jakiejś sprawy</p>
+            </div>
+
+            <div class="dropdown-section">
+                <span class="dropdown-label">Wybierz okres</span>
+                <div class="dropdown-box" onclick="openPeriodSheet()">
+                    <span id="selectedPeriodTextKto">Cała historia</span>
+                    <svg class="history-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="6 9 12 15 18 9"></polyline>
+                    </svg>
+                </div>
+            </div>
+
+            <div class="history-list">
+                <div class="date-header">Dzisiaj, 04.01.2024</div>
+                
+                <div class="entry-card">
+                    <div class="tag">
+                        <div class="tag-dot blue"></div>
+                        Weryfikowany dzień
+                    </div>
+                    <div class="entry-main">
+                        <div class="entry-details">
+                            <div class="entry-title">mBank</div>
+                            <div class="entry-subtitle">Godzina: <span>10:26</span></div>
+                        </div>
+                        <svg class="history-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="9 18 15 12 9 6"></polyline>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="tabZmiany" class="history-tab-content">
+            <div class="history-description">
+                <p>Sprawdzisz tu, kiedy Twój PESEL był zastrzeżony, a kiedy nie.</p>
+            </div>
+
+            <div class="dropdown-section">
+                <span class="dropdown-label">Wybierz okres</span>
+                <div class="dropdown-box" onclick="openPeriodSheet()">
+                    <span id="selectedPeriodTextZmiany">Cała historia</span>
+                    <svg class="history-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="6 9 12 15 18 9"></polyline>
+                    </svg>
+                </div>
+            </div>
+
+            <div class="history-list">
+                <div class="date-header">Dzisiaj, 04.01.2024</div>
+                
+                <div class="entry-card">
+                    <div class="tag">
+                        <div class="tag-dot orange"></div>
+                        PESEL niezastrzeżony
+                    </div>
+                    <div class="entry-details-full">
+                        <div class="entry-subtitle-large">Godzina: 11:59</div>
+                        <div class="entry-subtitle">Miejsce rejestracji: <span>Urząd gminy<br>Warszawa Wola</span></div>
+                    </div>
+                </div>
+
+                <div class="entry-card">
+                    <div class="tag">
+                        <div class="tag-dot green"></div>
+                        Pesel zastrzeżony
+                    </div>
+                    <div class="entry-details-full">
+                        <div class="entry-subtitle-large">Godzina: 17:38</div>
+                        <div class="entry-subtitle">Miejsce rejestracji: <span>mObywatel.gov.pl</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div id="periodSheet" class="overlay" onclick="closePeriodSheet(event)">
+        <div class="bottom-sheet" onclick="event.stopPropagation()">
+            <div class="sheet-handle-wrap"><div class="sheet-handle"></div></div>
+            <div class="sheet-header">
+                <div style="width: 60px;"></div>
+                <div class="sheet-title">Wybierz okres</div>
+                <button class="sheet-close" onclick="closePeriodSheet()">Zamknij</button>
+            </div>
+            
+            <div class="radio-card">
+                <label class="radio-row">
+                    <input type="radio" name="periodType" class="radio-input" value="Cała historia" checked>
+                    <div class="radio-circle"></div>
+                    <div class="radio-title">Cała historia</div>
+                </label>
+                <label class="radio-row">
+                    <input type="radio" name="periodType" class="radio-input" value="Wybierz okres">
+                    <div class="radio-circle"></div>
+                    <div class="radio-title">Wybierz okres</div>
+                </label>
+            </div>
+
+            <button class="btn-primary" onclick="applyPeriod()">Zastosuj</button>
+        </div>
+    </div>
+
+    <div id="helpModal" class="help-modal-overlay">
+        <div class="help-modal-content">
+            <div class="help-modal-text">test</div>
+            <button class="btn-primary" id="closeHelpModal">Zamknij</button>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    // Logika Głównego Widoku (Zastrzeż)
+    const toggle = document.getElementById('peselToggle');
+    const heading = document.getElementById('statusHeading');
+    const subheading = document.getElementById('statusSubheading');
+    const infoBlock = document.getElementById('infoBlock');
+
+    toggle.addEventListener('change', function() {
+        if(this.checked) {
+            heading.innerHTML = "Twój PESEL jest<br>zastrzeżony";
+            subheading.innerHTML = "Firmy i instytucje będą miały obowiązek<br>sprawdzać status numeru PESEL od czerwca<br>2024 roku.";
+            infoBlock.classList.add('active');
+        } else {
+            heading.innerHTML = "Twój PESEL jest<br>niezastrzeżony";
+            subheading.innerHTML = "Możesz go zastrzec już teraz. Firmy i<br>instytucje będą miały obowiązek<br>sprawdzać status numeru PESEL od<br>czerwca 2024 roku.";
+            infoBlock.classList.remove('active');
+        }
+    });
+
+    // Nawigacja
+    const viewMain = document.getElementById('viewMain');
+    const viewHistory = document.getElementById('viewHistory');
+
+    function showHistoryView(tabName) {
+        viewMain.classList.add('view-hidden');
+        viewHistory.classList.remove('view-hidden');
+        switchTab(tabName);
+        window.scrollTo(0, 0);
+    }
+
+    function hideHistoryView() {
+        viewHistory.classList.add('view-hidden');
+        viewMain.classList.remove('view-hidden');
+        window.scrollTo(0, 0);
+    }
+
+    // Przełącznik zakładek (Segmented Control)
+    const btnTabKto = document.getElementById('btnTabKto');
+    const btnTabZmiany = document.getElementById('btnTabZmiany');
+    const tabKto = document.getElementById('tabKto');
+    const tabZmiany = document.getElementById('tabZmiany');
+
+    function switchTab(tabName) {
+        if (tabName === 'kto') {
+            btnTabKto.classList.add('active');
+            btnTabZmiany.classList.remove('active');
+            tabKto.classList.add('active');
+            tabZmiany.classList.remove('active');
+        } else {
+            btnTabZmiany.classList.add('active');
+            btnTabKto.classList.remove('active');
+            tabZmiany.classList.add('active');
+            tabKto.classList.remove('active');
+        }
+    }
+
+    // Logika Bottom Sheet (Wybierz okres)
+    const periodSheet = document.getElementById('periodSheet');
+    const selectedPeriodTextKto = document.getElementById('selectedPeriodTextKto');
+    const selectedPeriodTextZmiany = document.getElementById('selectedPeriodTextZmiany');
+    const radioInputs = document.querySelectorAll('input[name="periodType"]');
+
+    function openPeriodSheet() {
+        periodSheet.classList.add('active');
+    }
+
+    function closePeriodSheet(e) {
+        if (e && e.target !== periodSheet && e.target.className !== 'sheet-close') return;
+        periodSheet.classList.remove('active');
+    }
+
+    function applyPeriod() {
+        let selectedValue = "Cała historia";
+        radioInputs.forEach(input => {
+            if (input.checked) selectedValue = input.value;
+        });
+        selectedPeriodTextKto.innerText = selectedValue;
+        selectedPeriodTextZmiany.innerText = selectedValue;
+        closePeriodSheet();
+    }
+
+    // Logika okienka pomocy
+    const helpButtons = document.querySelectorAll('.help-btn');
+    const helpModal = document.getElementById('helpModal');
+    const closeHelpModalBtn = document.getElementById('closeHelpModal');
+
+    helpButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            helpModal.classList.add('active');
+        });
+    });
+
+    closeHelpModalBtn.addEventListener('click', () => {
+        helpModal.classList.remove('active');
+    });
+
+    helpModal.addEventListener('click', (e) => {
+        if (e.target === helpModal) {
+            helpModal.classList.remove('active');
+        }
+    });
+
+</script>
+<script src="js/theme.js" defer></script>
+</body>
+</html>

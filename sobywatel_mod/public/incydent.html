@@ -1,0 +1,471 @@
+<!doctype html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <meta name="color-scheme" content="light dark" />
+    <script src="js/theme-init.js"></script>
+    <title>Bezpiecznie w sieci</title>
+
+    <link rel="stylesheet" href="css/theme.css" />
+    <link rel="stylesheet" href="css/service-subpage.css" />
+
+    <link rel="preload" href="assets/fonts/roboto_400_latinext.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="assets/fonts/roboto_500_latinext.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="assets/fonts/roboto_700_latinext.woff2" as="font" type="font/woff2" crossorigin />
+
+    <style>
+        @font-face {
+            font-family: 'Roboto';
+            src: url('assets/fonts/roboto_400_latinext.woff2') format('woff2');
+            font-weight: 400;
+            font-style: normal;
+        }
+        @font-face {
+            font-family: 'Roboto';
+            src: url('assets/fonts/roboto_500_latinext.woff2') format('woff2');
+            font-weight: 500;
+            font-style: normal;
+        }
+        @font-face {
+            font-family: 'Roboto';
+            src: url('assets/fonts/roboto_700_latinext.woff2') format('woff2');
+            font-weight: 700;
+            font-style: normal;
+        }
+
+        :root {
+            --bg-color: #f4f5f8;
+            --card-bg: #ffffff;
+            --text-main: #000000;
+            --text-secondary: #5e5e62;
+            --text-blue: #0a7aff;
+            --icon-bg-pink: #ffe5ee;
+            --icon-color-pink: #d81b60;
+            --border-color: #f0f0f5;
+            --info-bg: #eaf2ff;
+        }
+
+        :root[data-theme="dark"] {
+            --bg-color: #101317;
+            --card-bg: #1f2328;
+            --text-main: #ffffff;
+            --text-secondary: #a1a1a6;
+            --border-color: #38383a;
+            --icon-bg-pink: #3a1523;
+            --icon-color-pink: #ff4081;
+            --text-blue: #409cff;
+            --info-bg: #1a2a3a;
+        }
+
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: 'Roboto', -apple-system, sans-serif;
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .app-container {
+            width: 100%;
+            max-width: 400px;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        /* --- Mechanizm Widoków --- */
+        .view-section {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            min-height: 100vh;
+            transition: opacity 0.3s ease;
+        }
+
+        .view-hidden {
+            display: none !important;
+        }
+
+        /* --- Nagłówek --- */
+        .header {
+            display: flex;
+            align-items: center;
+            padding: 16px 20px;
+            background-color: var(--bg-color);
+            position: relative;
+            min-height: 56px;
+            z-index: 5;
+        }
+
+        .back-btn {
+            display: flex;
+            align-items: center;
+            text-decoration: none;
+            color: var(--text-blue);
+            font-size: 17px;
+            font-weight: 400;
+            cursor: pointer;
+            z-index: 10;
+            position: relative;
+            margin-left: -16px;
+            padding: 8px;
+        }
+
+        .back-btn svg {
+            width: 24px;
+            height: 24px;
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 2.2;
+            margin-right: 2px;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .header-title {
+            position: absolute;
+            width: 100%;
+            text-align: center;
+            left: 0;
+            font-weight: 600;
+            font-size: 17px;
+            pointer-events: none;
+        }
+
+        .main-content {
+            padding: 24px 20px;
+        }
+
+        /* --- Ikonka Główna (Różowa) --- */
+        .icon-circle {
+            width: 64px;
+            height: 64px;
+            background-color: var(--icon-bg-pink);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 24px;
+        }
+
+        .icon-complex {
+            position: relative;
+            width: 32px;
+            height: 32px;
+        }
+
+        .icon-complex svg {
+            width: 100%;
+            height: 100%;
+            fill: var(--icon-color-pink);
+        }
+
+        .icon-complex .shield {
+            position: absolute;
+            bottom: -2px;
+            right: -4px;
+            width: 18px;
+            height: 18px;
+            background-color: var(--icon-bg-pink);
+            border-radius: 50%;
+            padding: 1px;
+        }
+
+        /* --- Typografia --- */
+        .title {
+            font-size: 28px;
+            font-weight: 700;
+            line-height: 1.2;
+            margin-bottom: 12px;
+            letter-spacing: -0.5px;
+        }
+
+        .description {
+            font-size: 15px;
+            line-height: 1.45;
+            color: var(--text-secondary);
+            margin-bottom: 32px;
+        }
+
+        .section-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--text-main);
+            margin-bottom: 16px;
+            /* Usunięto margin-top: -8px; */
+        }
+
+        /* --- Karta Akcji (Zgłoś incydent) --- */
+        .action-card {
+            background-color: var(--card-bg);
+            border-radius: 16px;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            margin-bottom: 24px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: background-color 0.2s;
+        }
+
+        .action-card:active {
+            background-color: rgba(0,0,0,0.03);
+        }
+
+        .action-icon {
+            width: 24px;
+            height: 24px;
+            color: var(--text-secondary);
+            margin-right: 16px;
+            flex-shrink: 0;
+        }
+
+        .action-text-wrapper {
+            flex-grow: 1;
+        }
+
+        .action-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-main);
+            margin-bottom: 4px;
+        }
+
+        .action-subtitle {
+            font-size: 13px;
+            color: var(--text-secondary);
+            line-height: 1.35;
+        }
+
+        /* --- Info Box --- */
+        .info-box {
+            background-color: var(--info-bg);
+            border-radius: 16px;
+            padding: 16px;
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+        }
+
+        .info-icon-circle {
+            width: 20px;
+            height: 20px;
+            border: 1.5px solid var(--text-blue);
+            color: var(--text-blue);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            font-weight: 600;
+            font-size: 12px;
+            margin-top: 2px;
+        }
+
+        .info-text-wrapper p {
+            font-size: 13px;
+            line-height: 1.45;
+            color: var(--text-main);
+            margin-bottom: 10px;
+        }
+
+        .info-link {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-blue);
+            text-decoration: none;
+        }
+
+        /* --- Lista Incydentów (Ekran 2) --- */
+        .incident-list {
+            background-color: var(--card-bg);
+            border-radius: 16px;
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 24px;
+        }
+
+        .incident-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 18px 20px;
+            text-decoration: none;
+            color: var(--text-main);
+            position: relative;
+            transition: background 0.2s;
+        }
+
+        .incident-item:first-child { border-radius: 16px 16px 0 0; }
+        .incident-item:last-child { border-radius: 0 0 16px 16px; }
+        
+        .incident-item:active { background-color: rgba(0,0,0,0.03); }
+
+        .incident-item:not(:last-child)::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 20px;
+            right: 20px;
+            height: 1px;
+            background-color: var(--border-color);
+        }
+
+        .incident-name {
+            font-size: 15px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .incident-desc {
+            font-size: 13px;
+            color: var(--text-secondary);
+            line-height: 1.35;
+            padding-right: 12px;
+        }
+
+        .chevron {
+            width: 18px;
+            height: 18px;
+            color: #b0b0b8;
+            flex-shrink: 0;
+        }
+
+    </style>
+</head>
+<body class="service-subpage">
+
+<div class="app-container">
+    
+    <section id="viewMain" class="view-section">
+        <header class="header service-header">
+            <a href="services.html" class="back-btn">
+                <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                Wróć
+            </a>
+            <div class="header-title">Bezpiecznie w sieci</div>
+            <div class="service-header__slot" aria-hidden="true"></div>
+        </header>
+
+        <main class="main-content">
+            <div class="icon-circle">
+                <div class="icon-complex">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zm6.93 6h-2.95c-.32-1.25-.78-2.45-1.38-3.56 1.84.63 3.37 1.91 4.33 3.56zM12 4.04c.83 1.2 1.48 2.53 1.91 3.96h-3.82c.43-1.43 1.08-2.76 1.91-3.96zM4.26 14C4.1 13.36 4 12.69 4 12s.1-1.36.26-2h3.38c-.08.66-.14 1.32-.14 2 0 .68.06 1.34.14 2H4.26zm.82 2h2.95c.32 1.25.78 2.45 1.38 3.56-1.84-.63-3.37-1.9-4.33-3.56zm2.95-8H5.08c.96-1.66 2.49-2.93 4.33-3.56C8.81 5.55 8.35 6.75 8.03 8zM12 19.96c-.83-1.2-1.48-2.53-1.91-3.96h3.82c-.43 1.43-1.08 2.76-1.91 3.96zM14.34 14H9.66c-.09-.66-.16-1.32-.16-2 0-.68.07-1.35.16-2h4.68c.09.65.16 1.32.16 2 0 .68-.07 1.34-.16 2zm.25 5.56c.6-1.11 1.06-2.31 1.38-3.56h2.95c-.96 1.65-2.49 2.93-4.33 3.56zM16.36 14c.08-.66.14-1.32.14-2 0-.68-.06-1.34-.14-2h3.38c.16.64.26 1.31.26 2s-.1 1.36-.26 2h-3.38z"/>
+                    </svg>
+                    <svg class="shield" viewBox="0 0 24 24">
+                        <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/>
+                    </svg>
+                </div>
+            </div>
+
+            <h1 class="title">Uważaj na oszustwa</h1>
+            <p class="description">
+                Dostajesz niepokojące wiadomości lub widzisz podejrzaną stronę? Zgłoś to!
+            </p>
+
+            <div class="action-card" onclick="switchView('viewIncidentType')">
+                <svg class="action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="22" y1="2" x2="11" y2="13"></line>
+                    <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                </svg>
+                <div class="action-text-wrapper">
+                    <div class="action-title">Zgłoś incydent</div>
+                    <div class="action-subtitle">Zgłoś zdarzenie, które narusza Twoje bezpieczeństwo w sieci.</div>
+                </div>
+                <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+            </div>
+
+            <div class="info-box">
+                <div class="info-icon-circle">i</div>
+                <div class="info-text-wrapper">
+                    <p>Chcesz być na bieżąco z aktualnymi ostrzeżeniami o nadużyciach w sieci?</p>
+                    <a href="#" class="info-link">Włącz powiadomienia</a>
+                </div>
+            </div>
+        </main>
+    </section>
+
+
+    <section id="viewIncidentType" class="view-section view-hidden">
+        <header class="header service-header">
+            <div class="back-btn" onclick="switchView('viewMain')">
+                <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                Wróć
+            </div>
+            <div class="header-title">Wybierz rodzaj incydentu</div>
+            <div class="service-header__slot" aria-hidden="true"></div>
+        </header>
+
+        <main class="main-content">
+            
+            <div class="incident-list">
+                <a href="#" class="incident-item">
+                    <div class="incident-text-wrapper">
+                        <div class="incident-name">Złośliwa strona internetowa</div>
+                        <div class="incident-desc">Próba wyłudzenia danych osobowych lub pieniędzy.</div>
+                    </div>
+                    <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                </a>
+                
+                <a href="#" class="incident-item">
+                    <div class="incident-text-wrapper">
+                        <div class="incident-name">Podejrzany SMS</div>
+                        <div class="incident-desc">Podejrzana treść lub podejrzany nadawca.</div>
+                    </div>
+                    <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                </a>
+                
+                <a href="#" class="incident-item">
+                    <div class="incident-text-wrapper">
+                        <div class="incident-name">Podejrzany e-mail</div>
+                        <div class="incident-desc">Podejrzane załączniki, szantaż lub phishing.</div>
+                    </div>
+                    <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                </a>
+                
+                <a href="#" class="incident-item">
+                    <div class="incident-text-wrapper">
+                        <div class="incident-name">Oszustwo</div>
+                        <div class="incident-desc">Fałszywe sklepy internetowe i inne próby podszywania się pod firmy lub instytucje.</div>
+                    </div>
+                    <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                </a>
+                
+                <a href="#" class="incident-item">
+                    <div class="incident-text-wrapper">
+                        <div class="incident-name">Inny</div>
+                        <div class="incident-desc">Pozostałe zdarzenia, które nie pasują do poprzednich rodzajów incydentów.</div>
+                    </div>
+                    <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                </a>
+            </div>
+        </main>
+    </section>
+
+</div>
+
+<script>
+    // Prosta funkcja do przełączania widoków
+    function switchView(viewId) {
+        document.querySelectorAll('.view-section').forEach(el => {
+            el.classList.add('view-hidden');
+        });
+        document.getElementById(viewId).classList.remove('view-hidden');
+        window.scrollTo(0, 0); // Przewija ekran na samą górę po zmianie widoku
+    }
+</script>
+
+<script src="js/theme.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,252 @@
+<!doctype html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <meta name="color-scheme" content="light dark" />
+    <script src="js/theme-init.js"></script>
+    <title>Sprawdź PESEL</title>
+
+    <link rel="stylesheet" href="css/theme.css" />
+    <link rel="stylesheet" href="css/service-subpage.css" />
+
+    <link rel="preload" href="assets/fonts/roboto_400_latinext.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="assets/fonts/roboto_500_latinext.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="assets/fonts/roboto_700_latinext.woff2" as="font" type="font/woff2" crossorigin />
+
+    <style>
+        @font-face {
+            font-family: 'Roboto';
+            src: url('assets/fonts/roboto_400_latinext.woff2') format('woff2');
+            font-weight: 400;
+            font-style: normal;
+        }
+        @font-face {
+            font-family: 'Roboto';
+            src: url('assets/fonts/roboto_500_latinext.woff2') format('woff2');
+            font-weight: 500;
+            font-style: normal;
+        }
+        @font-face {
+            font-family: 'Roboto';
+            src: url('assets/fonts/roboto_700_latinext.woff2') format('woff2');
+            font-weight: 700;
+            font-style: normal;
+        }
+
+        :root {
+            --bg-color: #f4f5f8;
+            --card-bg: #ffffff;
+            --text-main: #000000;
+            --text-secondary: #5e5e62;
+            --text-blue: #1c5ff0;
+            --icon-bg: #ead8fa; /* Jasny fioletowy */
+            --icon-color: #a45ad6; /* Głęboki fioletowy */
+        }
+
+        :root[data-theme="dark"] {
+            --bg-color: #101317;
+            --card-bg: #1f2328;
+            --text-main: #ffffff;
+            --text-secondary: #a1a1a6;
+            --text-blue: #409cff;
+            --icon-bg: #321d45;
+            --icon-color: #ba75e8;
+        }
+
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: 'Roboto', -apple-system, sans-serif;
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+            min-height: 100dvh;
+            overflow-x: hidden;
+        }
+
+        .app-container {
+            width: 100%;
+            max-width: 400px;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            min-height: 100dvh;
+            position: relative;
+        }
+
+        /* --- Header --- */
+        .header {
+            display: flex;
+            align-items: center;
+            padding: 16px 20px;
+            background-color: var(--bg-color);
+            position: relative;
+            min-height: 56px;
+            z-index: 5;
+        }
+
+        .back-btn {
+            display: flex;
+            align-items: center;
+            text-decoration: none;
+            color: var(--text-blue);
+            font-size: 17px;
+            font-weight: 400;
+            cursor: pointer;
+            z-index: 10;
+            position: relative;
+            margin-left: -16px;
+            padding: 8px;
+        }
+
+        .back-btn svg {
+            width: 24px;
+            height: 24px;
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 2.2;
+            margin-right: 2px;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .header-title {
+            position: absolute;
+            width: 100%;
+            text-align: center;
+            left: 0;
+            font-weight: 600;
+            font-size: 17px;
+            pointer-events: none;
+        }
+
+        /* --- Main Content --- */
+        .main-content {
+            padding: 24px 20px;
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+        }
+
+        .icon-circle {
+            width: 64px;
+            height: 64px;
+            background-color: var(--icon-bg);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 24px;
+        }
+
+        .icon-circle svg {
+            width: 32px;
+            height: 32px;
+        }
+
+        .title {
+            font-size: 30px;
+            font-weight: 700;
+            line-height: 1.15;
+            margin-bottom: 12px;
+            letter-spacing: -0.5px;
+        }
+
+        .description {
+            font-size: 15px;
+            line-height: 1.45;
+            color: var(--text-secondary);
+            margin-bottom: 32px;
+        }
+
+        .section-label {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-main);
+            margin-bottom: 16px;
+        }
+
+        /* --- Osobne Karty Wyboru --- */
+        .card-option {
+            background-color: var(--card-bg);
+            border-radius: 16px;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            text-decoration: none;
+            color: var(--text-main);
+            transition: background-color 0.2s;
+        }
+
+        .card-option:active {
+            background-color: rgba(0,0,0,0.03);
+        }
+
+        .card-option-text {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .chevron {
+            width: 20px;
+            height: 20px;
+            color: #b0b0b8;
+        }
+
+    </style>
+</head>
+<body class="service-subpage">
+
+<div class="app-container">
+    <header class="header service-header">
+        <a href="services.html" class="back-btn">
+            <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"></polyline></svg>
+            Usługi
+        </a>
+        <div class="header-title">Sprawdź PESEL</div>
+        <div class="service-header__slot" aria-hidden="true"></div>
+    </header>
+
+    <main class="main-content">
+        <div class="icon-circle">
+            <svg viewBox="0 0 24 24">
+                <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z" fill="var(--icon-color)"/>
+                <circle cx="11" cy="10" r="3" fill="none" stroke="var(--icon-bg)" stroke-width="2"/>
+                <line x1="13.5" y1="12.5" x2="16.5" y2="15.5" stroke="var(--icon-bg)" stroke-width="2.5" stroke-linecap="round"/>
+            </svg>
+        </div>
+
+        <h1 class="title">Sprawdź PESEL<br>drugiej osoby</h1>
+        
+        <p class="description">
+            Chcesz załatwić z kimś sprawę? Dowiedz się, czy ma zastrzeżony PESEL, czy nie.
+        </p>
+
+        <h2 class="section-label">W czyim imieniu sprawdzasz?</h2>
+
+        <a href="#" class="card-option">
+            <span class="card-option-text">Własnym</span>
+            <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+        </a>
+
+        <a href="#" class="card-option">
+            <span class="card-option-text">Firmy lub instytucji</span>
+            <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+        </a>
+    </main>
+
+</div>
+
+<script src="js/theme.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="pl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+    />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta
+      name="apple-mobile-web-app-status-bar-style"
+      content="black-translucent"
+    />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <title>Powiadomienia</title>
+    <script src="js/theme-init.js"></script>
+
+    <link rel="preload" href="css/main.css" as="style" />
+    <link rel="preload" href="css/common.css" as="style" />
+    <link rel="preload" href="css/pages/powiadomienia.css" as="style" />
+
+    <link rel="icon" href="favicon.ico" type="image/x-icon" />
+    <link rel="apple-touch-icon" href="icon.png" />
+    <link rel="manifest" href="manifest.json" />
+
+    <link rel="stylesheet" href="css/main.css" />
+    <link rel="stylesheet" href="css/common.css" />
+    <link rel="stylesheet" href="css/theme.css" />
+    <link rel="stylesheet" href="css/overlay-camera.css" />
+    <link rel="stylesheet" href="css/pages/powiadomienia.css" />
+    <link rel="stylesheet" href="css/guard.css" />
+
+    <script src="js/guard.js" defer></script>
+    <script src="js/theme.js" defer></script>
+    <script src="js/header.js" defer></script>
+    <script src="js/navigation.js" defer></script>
+    <script src="js/pages/powiadomienia.js" defer></script>
+  </head>
+  <body class="notif-page">
+    <div
+      id="jsGuard"
+      class="guard-overlay"
+      role="status"
+      aria-live="polite"
+      hidden
+    >
+      <div class="guard-card"></div>
+    </div>
+
+    <header class="app-header dowod-header">
+      <div class="header-left">
+        <a href="documents.html" class="back-link" id="notif-back-link">
+          <img
+            class="back-icon"
+            src="assets/icons/ab004_arrow_left.svg"
+            alt=""
+          />
+          <span class="back-label" id="notif-back-label">Dokumenty</span>
+        </a>
+        <span class="header-title fade-in">Powiadomienia</span>
+      </div>
+    </header>
+
+    <main class="notif-main">
+      <h1 id="main-title" class="notif-page-title">Powiadomienia</h1>
+      <p class="notif-intro">
+        Zarządzaj powiadomieniami – możesz wybrać, które chcesz dostawać.
+      </p>
+
+      <div class="notif-list" role="list">
+        <article class="notif-item" role="listitem">
+          <div class="notif-item__body">
+            <h2 class="notif-item__title">Dokumenty</h2>
+            <p class="notif-item__desc">
+              Powiadomienia na przykład o możliwości odbioru, zbliżającym się
+              końcu ważności czy unieważnieniu dokumentu.
+            </p>
+          </div>
+          <label class="notif-switch" aria-label="Powiadomienia o dokumentach">
+            <input type="checkbox" id="notif-dokumenty" data-pref="dokumenty" checked />
+            <span class="notif-switch__slider" aria-hidden="true"></span>
+          </label>
+        </article>
+
+        <h3 class="notif-section-title">Usługi</h3>
+
+        <article class="notif-item" role="listitem">
+          <div class="notif-item__body">
+            <h2 class="notif-item__title">Zastrzeż PESEL</h2>
+            <p class="notif-item__desc">
+              Powiadomienia o zastrzeżeniu, cofnięciu zastrzeżenia i weryfikacji
+              numeru PESEL.
+            </p>
+          </div>
+          <label class="notif-switch" aria-label="Powiadomienia Zastrzeż PESEL">
+            <input
+              type="checkbox"
+              id="notif-zastrzez-pesel"
+              data-pref="zastrzezPesel"
+              checked
+            />
+            <span class="notif-switch__slider" aria-hidden="true"></span>
+          </label>
+        </article>
+
+        <article class="notif-item" role="listitem">
+          <div class="notif-item__body">
+            <h2 class="notif-item__title">ePłatności</h2>
+            <p class="notif-item__desc">
+              Powiadomienie o nowych płatnościach i ich statusach.
+            </p>
+          </div>
+          <label class="notif-switch" aria-label="Powiadomienia ePłatności">
+            <input
+              type="checkbox"
+              id="notif-eplatnosci"
+              data-pref="eplatnosci"
+              checked
+            />
+            <span class="notif-switch__slider" aria-hidden="true"></span>
+          </label>
+        </article>
+
+        <article class="notif-item notif-item--last" role="listitem">
+          <div class="notif-item__body">
+            <h2 class="notif-item__title">Bezpiecznie w sieci</h2>
+            <p class="notif-item__desc">
+              Powiadomienia o aktualnych zagrożeniach w internecie.
+            </p>
+          </div>
+          <label class="notif-switch" aria-label="Powiadomienia Bezpiecznie w sieci">
+            <input
+              type="checkbox"
+              id="notif-bezpiecznie"
+              data-pref="bezpiecznieWSieci"
+              checked
+            />
+            <span class="notif-switch__slider" aria-hidden="true"></span>
+          </label>
+        </article>
+      </div>
+    </main>
+  </body>
+</html>

@@ -1,0 +1,22 @@
+{
+  "name": "sObywatel 4.0",
+  "short_name": "mObywatel",
+  "description": "by xenochr1st",
+  "start_url": "index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "theme_color": "#ffffff",
+  "background_color": "#ffffff",
+  "icons": [
+    {
+      "src": "icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["government", "utilities"],
+  "lang": "pl",
+  "dir": "ltr"
+}
