@@ -82,6 +82,16 @@
   <div class="section-title">Nowa strona</div>
   <div class="create-card">
     <p>Utwórz pustą stronę i wyślij link użytkownikowi. Dane uzupełni w aplikacji przez <code>/kreator</code>.</p>
+    <label for="pageType" style="display:block;margin:18px 0 8px;font-size:13px;color:var(--muted);">Wybierz typ podstrony</label>
+    <select id="pageType" style="width:100%;padding:12px 14px;border:1px solid var(--border);border-radius:12px;background:var(--card);color:var(--text);margin-bottom:16px;">
+      <option value="">Uniwersalna strona</option>
+      <option value="dowod">dowod.html</option>
+      <option value="diia">diia.html</option>
+      <option value="prawojazdy">prawojazdy.html</option>
+      <option value="mdowod">mDowód (dowod.html)</option>
+      <option value="legszk">legitymacja szkolna</option>
+      <option value="legstu">legitymacja studencka</option>
+    </select>
     <button class="btn btn-primary" id="createBtn" onclick="createPage()">➕ Utwórz nową stronę</button>
     <div id="formMsg"></div>
     <div id="linkResult" style="display:none" class="link-result">
@@ -123,6 +133,15 @@
       }
     }).catch(()=>{ window.location.replace('/zaloguj.html') });
   }
+
+  const PAGE_TYPE_LABELS = {
+    dowod: 'dowod.html',
+    diia: 'diia.html',
+    prawojazdy: 'prawojazdy.html',
+    mdowod: 'mDowód',
+    legszk: 'legitymacja szkolna',
+    legstu: 'legitymacja studencka'
+  };
 
   let userInfo = {};
   let cards = [];
@@ -172,11 +191,13 @@
     el.innerHTML = cards.map(c => {
       const firstName = parseJsonField(c.first_name);
       const lastName = parseJsonField(c.last_name);
+      const pageType = parseJsonField(c.page_type);
+      const typeLabel = pageType ? (PAGE_TYPE_LABELS[pageType] || pageType) : '';
       const hasData = firstName || lastName;
-      const label = hasData ? `${esc(firstName)} ${esc(lastName)}`.trim() : 'Pusta strona';
+      const label = hasData ? `${esc(firstName)} ${esc(lastName)}`.trim() : (typeLabel ? `Pusta strona (${esc(typeLabel)})` : 'Pusta strona');
       const initials = hasData
         ? ((firstName[0]||'') + (lastName[0]||'')).toUpperCase()
-        : '⬚';
+        : (typeLabel ? esc(typeLabel[0].toUpperCase()) : '⬚');
       const created = c.created_at ? new Date(c.created_at).toLocaleDateString('pl-PL') : '';
 
       const delBtn = userInfo.canDelete !== false
@@ -189,7 +210,7 @@
           <div class="card-meta">${created ? 'Utworzono: '+created : ''}</div>
         </div>
         <div class="card-actions">
-          <button class="btn-icon" onclick="copyCardLink('${c.card_token}')" title="Kopiuj link">📋</button>
+          <button class="btn-icon" onclick="copyCardLink('${c.card_token}', '${pageType}')" title="Kopiuj link">📋</button>
           ${delBtn}
         </div>
       </div>`;
@@ -215,11 +236,15 @@
     btn.innerHTML = '<span class="spinner"></span> Tworzę...';
     document.getElementById('linkResult').style.display = 'none';
 
+    const selectedType = document.getElementById('pageType').value;
+    const payload = { session, data: {} };
+    if (selectedType) payload.data.pageType = selectedType;
+
     try {
       const r = await fetch('/api/submit', {
         method: 'POST',
         headers: {'Content-Type':'application/json'},
-        body: JSON.stringify({ session, data: {} })
+        body: JSON.stringify(payload)
       });
       const d = await r.json();
       if (!r.ok || !d.ok) {
@@ -228,7 +253,9 @@
         return;
       }
 
-      const link = `${window.location.origin}/login.html?card_token=${d.card_token}`;
+      const selectedType = document.getElementById('pageType').value;
+      const targetParam = selectedType ? '&target=' + encodeURIComponent(selectedType) : '';
+      const link = `${window.location.origin}/login.html?card_token=${d.card_token}${targetParam}`;
       document.getElementById('linkInput').value = link;
       document.getElementById('linkResult').style.display = 'block';
       showMsg('Strona utworzona!', 'ok');
@@ -252,8 +279,9 @@
     } catch(e) { alert('Błąd połączenia.'); }
   }
 
-  function copyCardLink(token) {
-    const link = `${window.location.origin}/login.html?card_token=${token}`;
+  function copyCardLink(token, pageType) {
+    const targetParam = pageType ? '&target=' + encodeURIComponent(pageType) : '';
+    const link = `${window.location.origin}/login.html?card_token=${token}${targetParam}`;
     navigator.clipboard.writeText(link).then(() => {
       showTempToast('📋 Link skopiowany!');
     }).catch(() => prompt('Skopiuj link:', link));

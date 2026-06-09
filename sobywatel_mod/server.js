@@ -304,6 +304,7 @@ app.post('/api/cards', async (req, res) => {
 
     const cards = await sql`
       SELECT id, card_token, data->'firstName' as first_name, data->'lastName' as last_name,
+             data->'pageType' as page_type,
              data->'birthDay' as birth_day, data->'birthMonth' as birth_month, data->'birthYear' as birth_year,
              created_at
       FROM cards WHERE key_id = ${key.id} ORDER BY created_at DESC

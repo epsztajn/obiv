@@ -42,7 +42,9 @@
     { key: 'address', label: 'Adres zameldowania', placeholder: 'ul. Przykładowa 1, Warszawa' },
     { key: 'postalcode', label: 'Kod pocztowy', placeholder: '00-000' },
     { key: 'fathername', label: 'Imię ojca', placeholder: 'opcjonalnie', optional: true },
-    { key: 'mothername', label: 'Imię matki', placeholder: 'opcjonalnie', optional: true }
+    { key: 'mothername', label: 'Imię matki', placeholder: 'opcjonalnie', optional: true },
+    { key: 'fatherSurname', label: 'Nazwisko ojca', placeholder: 'np. Kowalski', optional: true },
+    { key: 'motherSurname', label: 'Nazwisko matki', placeholder: 'np. Kowalska', optional: true }
   ];
 
   var DOC_EXTRA_STEPS = {
@@ -270,6 +272,12 @@
         return true;
       case 'mothername':
         collected.mothername = pick(FEMALE_NAMES);
+        return true;
+      case 'fatherSurname':
+        collected.fatherSurname = pick(SURNAMES);
+        return true;
+      case 'motherSurname':
+        collected.motherSurname = pick(SURNAMES);
         return true;
       case 'registrationDate':
         if (!collected.birthDay) applyBirthParts(randomBirthParts());
@@ -532,6 +540,7 @@
       'miejsce urodzenia': 'placeOfBirth', 'adres': 'address',
       'kod pocztowy': 'postalcode', 'imię ojca': 'fathername', 'imie ojca': 'fathername',
       'imię matki': 'mothername', 'imie matki': 'mothername',
+      'nazwisko ojca': 'fatherSurname', 'nazwisko matki': 'motherSurname',
       'seria mdowodu': 'md_idSeries', 'mdowód': 'md_idSeries', 'mdowod': 'md_idSeries',
       'dowód': 'do_idSeries', 'dowod': 'do_idSeries',
       'kategoria': 'pj_category', 'kategoria pj': 'pj_category'
