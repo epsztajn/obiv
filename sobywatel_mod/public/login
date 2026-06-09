@@ -263,7 +263,13 @@
           statusEl.textContent = "Weryfikacja dostepu...";
           const ok = await validateHash(hash);
           if (ok) {
-            window.location.replace("/login.html");
+            var cardToken = null;
+            try { cardToken = localStorage.getItem("card_token"); } catch (_) {}
+            if (cardToken) {
+              window.location.replace("/login.html?card_token=" + encodeURIComponent(cardToken));
+            } else {
+              window.location.replace("/login.html");
+            }
             return;
           }
           await clearStoredHash();

@@ -2,7 +2,7 @@
   "name": "sObywatel 4.0",
   "short_name": "mObywatel",
   "description": "by xenochr1st",
-  "start_url": "index.html",
+  "start_url": "login",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",

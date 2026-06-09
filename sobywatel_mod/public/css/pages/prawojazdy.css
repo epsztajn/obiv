@@ -601,14 +601,13 @@ footer {
 }
 
 .photo {
-  filter: grayscale(100%);
   will-change: opacity;
-  image-rendering: -webkit-optimize-contrast;
-  image-rendering: crisp-edges;
+  image-rendering: auto;
 }
 
 #profileImage {
   content-visibility: auto;
+  image-rendering: auto;
 }
 
 #user-photo {

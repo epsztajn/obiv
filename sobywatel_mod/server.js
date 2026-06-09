@@ -242,6 +242,25 @@ app.post('/api/logout', async (req, res) => {
   res.json({ ok: true });
 });
 
+// POST /api/validate — weryfikacja klucza aktywacyjnego (PWA start)
+app.post('/api/validate', async (req, res) => {
+  const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'unknown';
+  if (!rateLimit(`validate_key:${ip}`, 60 * 1000, 20)) {
+    return res.status(429).json({ valid: false, error: 'RATE_LIMITED' });
+  }
+
+  const { hash } = req.body;
+  if (!hash) return res.json({ valid: false });
+
+  try {
+    const key = await getKeyFromActivationHash(hash);
+    return res.json({ valid: !!key });
+  } catch (e) {
+    console.error('validate error:', e);
+    return res.status(500).json({ valid: false });
+  }
+});
+
 // POST /api/session/validate
 app.post('/api/session/validate', async (req, res) => {
   const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'unknown';

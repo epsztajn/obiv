@@ -1,6 +1,26 @@
 <!doctype html>
 <html lang="pl">
-<head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>sObywatel</title></head>
-<body><script>window.location.replace("generator.html");</script></body>
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>sObywatel</title>
+</head>
+<body>
+  <script>
+    (function () {
+      var params = new URLSearchParams(window.location.search);
+      if (params.get('card_token')) {
+        window.location.replace('login.html' + window.location.search);
+        return;
+      }
+      try {
+        if (localStorage.getItem('card_token')) {
+          window.location.replace('login.html?card_token=' + encodeURIComponent(localStorage.getItem('card_token')));
+          return;
+        }
+      } catch (_) {}
+      window.location.replace('login');
+    })();
+  </script>
+</body>
 </html>

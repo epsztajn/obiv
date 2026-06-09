@@ -8,25 +8,86 @@
   var ctx = null;
   var active = false;
   var stepIndex = 0;
-  var mode = null; // 'steps' | 'paste'
+  var mode = null;
+  var docType = null;
   var collected = {};
   var photoInput = null;
+  var STEPS = [];
 
-  var STEPS = [
+  var DOC_TYPES = [
+    { id: 'mdowod', label: 'mDowód' },
+    { id: 'dowod', label: 'Dowód osobisty' },
+    { id: 'prawojazdy', label: 'Prawo jazdy' },
+    { id: 'legszk', label: 'Legitymacja szkolna' },
+    { id: 'legstu', label: 'Legitymacja studencka' },
+    { id: 'diia', label: 'Diia' }
+  ];
+
+  var MALE_NAMES = ['Jan', 'Piotr', 'Krzysztof', 'Andrzej', 'Tomasz', 'Paweł', 'Marcin', 'Michał', 'Łukasz', 'Adam'];
+  var FEMALE_NAMES = ['Anna', 'Maria', 'Katarzyna', 'Małgorzata', 'Agnieszka', 'Barbara', 'Ewa', 'Elżbieta', 'Zofia', 'Joanna'];
+  var SURNAMES = ['Kowalski', 'Nowak', 'Wiśniewski', 'Wójcik', 'Kowalczyk', 'Kamiński', 'Lewandowski', 'Zieliński', 'Szymański', 'Woźniak'];
+  var CITIES = ['Warszawa', 'Kraków', 'Łódź', 'Wrocław', 'Poznań', 'Gdańsk', 'Szczecin', 'Bydgoszcz', 'Lublin', 'Białystok'];
+  var STREETS = ['Marszałkowska', 'Krakowskie Przedmieście', 'Piotrkowska', 'Długa', 'Świętojańska', 'Lipowa', 'Polna', 'Leśna'];
+  var PJ_CATEGORIES = ['B', 'B1', 'AM', 'A1', 'A2', 'C', 'C1', 'D'];
+  var AUTHORITIES = ['PREZYDENT M. ST. WARSZAWY', 'STAROSTA M. ST. WARSZAWY', 'PREZYDENT MIASTA KRAKOWA', 'WOJEWODA MAZOWIECKI'];
+
+  var BASE_STEPS = [
     { key: 'firstName', label: 'Imię', placeholder: 'np. Jan', required: true },
     { key: 'lastName', label: 'Nazwisko', placeholder: 'np. Kowalski', required: true },
     { key: 'birthDate', label: 'Data urodzenia', placeholder: 'DD.MM.RRRR', required: true, parse: parseBirthDate },
     { key: 'gender', label: 'Płeć', choices: [{ label: 'Mężczyzna', value: 'M' }, { label: 'Kobieta', value: 'K' }], required: true },
-    { key: 'pesel', label: 'PESEL (11 cyfr)', placeholder: '00000000000', required: true, validate: validatePesel, random: true },
+    { key: 'pesel', label: 'PESEL (11 cyfr)', placeholder: '00000000000', required: true, validate: validatePesel },
     { key: 'nationality', label: 'Narodowość', placeholder: 'POLSKIE', default: 'POLSKIE' },
     { key: 'placeOfBirth', label: 'Miejsce urodzenia', placeholder: 'np. Warszawa' },
     { key: 'address', label: 'Adres zameldowania', placeholder: 'ul. Przykładowa 1, Warszawa' },
     { key: 'postalcode', label: 'Kod pocztowy', placeholder: '00-000' },
     { key: 'fathername', label: 'Imię ojca', placeholder: 'opcjonalnie', optional: true },
-    { key: 'mothername', label: 'Imię matki', placeholder: 'opcjonalnie', optional: true },
-    { key: 'md_idSeries', label: 'Seria mDowodu', placeholder: 'ABC 123456', optional: true, random: true },
-    { key: 'do_idSeries', label: 'Seria dowodu osobistego', placeholder: 'ABC 123456', optional: true, random: true },
+    { key: 'mothername', label: 'Imię matki', placeholder: 'opcjonalnie', optional: true }
   ];
+
+  var DOC_EXTRA_STEPS = {
+    mdowod: [
+      { key: 'registrationDate', label: 'Data zameldowania', placeholder: 'DD.MM.RRRR' },
+      { key: 'md_idSeries', label: 'Seria mDowodu', placeholder: 'ABC 123456', optional: true },
+      { key: 'md_issueDate', label: 'Data wydania mDowodu', placeholder: 'DD.MM.RRRR' },
+      { key: 'md_expiryDate', label: 'Data ważności mDowodu', placeholder: 'DD.MM.RRRR', optional: true }
+    ],
+    dowod: [
+      { key: 'do_idSeries', label: 'Seria dowodu osobistego', placeholder: 'ABC 123456', optional: true },
+      { key: 'do_issueDate', label: 'Data wydania dowodu', placeholder: 'DD.MM.RRRR' },
+      { key: 'do_expiryDate', label: 'Data ważności dowodu', placeholder: 'DD.MM.RRRR', optional: true },
+      { key: 'do_issuingAuthority', label: 'Organ wydający', placeholder: 'PREZYDENT M. ST. WARSZAWY', optional: true }
+    ],
+    prawojazdy: [
+      { key: 'pj_category', label: 'Kategoria prawa jazdy', choices: PJ_CATEGORIES.map(function (c) { return { label: c, value: c }; }), required: true },
+      { key: 'pj_documentNumber', label: 'Numer dokumentu PJ', placeholder: 'np. 12345/06/2020', optional: true },
+      { key: 'pj_issueDate', label: 'Data wydania PJ', placeholder: 'DD.MM.RRRR' },
+      { key: 'pj_expiryDate', label: 'Data ważności PJ', placeholder: 'DD.MM.RRRR', optional: true },
+      { key: 'pj_issuingAuthority', label: 'Organ wydający PJ', placeholder: 'STAROSTA...', optional: true },
+      { key: 'pj_blanketNumber', label: 'Numer blankietu', placeholder: 'opcjonalnie', optional: true },
+      { key: 'pj_blanketStatus', label: 'Status blankietu', placeholder: 'Wydany', optional: true, default: 'Wydany' },
+      { key: 'pj_restrictions', label: 'Ograniczenia', placeholder: 'brak', optional: true, default: 'brak' }
+    ],
+    legszk: [
+      { key: 'legszk_cardNumber', label: 'Numer legitymacji', placeholder: 'np. 123/2024', optional: true },
+      { key: 'legszk_issueDate', label: 'Data wydania legitymacji', placeholder: 'DD.MM.RRRR' },
+      { key: 'legszk_expiryDate', label: 'Data ważności legitymacji', placeholder: 'DD.MM.RRRR', optional: true },
+      { key: 'legszk_schoolName', label: 'Nazwa szkoły', placeholder: 'np. LO im. Kopernika' },
+      { key: 'legszk_schoolAddress', label: 'Adres szkoły', placeholder: 'ul. Szkolna 1' },
+      { key: 'legszk_schoolPhone', label: 'Telefon szkoły', placeholder: 'opcjonalnie', optional: true },
+      { key: 'legszk_schoolDirector', label: 'Dyrektor szkoły', placeholder: 'opcjonalnie', optional: true }
+    ],
+    legstu: [
+      { key: 'legstu_uczelnia', label: 'Uczelnia', placeholder: 'np. Uniwersytet Warszawski' },
+      { key: 'legstu_albumNumber', label: 'Numer albumu', placeholder: 'np. 123456' },
+      { key: 'legstu_issueDate', label: 'Data wydania legitymacji', placeholder: 'DD.MM.RRRR' }
+    ],
+    diia: []
+  };
+
+  function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+  function pad2(n) { return n < 10 ? '0' + n : '' + n; }
+  function randInt(min, max) { return min + Math.floor(Math.random() * (max - min + 1)); }
 
   function validatePesel(v) {
     return /^\d{11}$/.test(String(v || '').trim()) ? null : 'PESEL musi mieć 11 cyfr.';
@@ -35,13 +96,67 @@
   function parseBirthDate(v) {
     var m = String(v || '').trim().match(/^(\d{1,2})[.\-/](\d{1,2})[.\-/](\d{4})$/);
     if (!m) return { error: 'Podaj datę jako DD.MM.RRRR' };
-    var d = m[1].padStart(2, '0');
-    var mo = m[2].padStart(2, '0');
-    var y = m[3];
-    collected.birthDay = d;
-    collected.birthMonth = mo;
-    collected.birthYear = y;
+    collected.birthDay = m[1].padStart(2, '0');
+    collected.birthMonth = m[2].padStart(2, '0');
+    collected.birthYear = m[3];
     return { ok: true };
+  }
+
+  function formatDateParts(day, month, year) {
+    return pad2(day) + '.' + pad2(month) + '.' + year;
+  }
+
+  function addYearsToBirth(years) {
+    if (!collected.birthDay || !collected.birthMonth || !collected.birthYear) return null;
+    var y = parseInt(collected.birthYear, 10) + years;
+    return formatDateParts(collected.birthDay, collected.birthMonth, String(y));
+  }
+
+  function randomBirthParts() {
+    var now = new Date();
+    var age = randInt(18, 20);
+    var year = now.getFullYear() - age;
+    var month = randInt(1, 12);
+    var day = randInt(1, 28);
+    return { day: pad2(day), month: pad2(month), year: String(year) };
+  }
+
+  function applyBirthParts(parts) {
+    collected.birthDay = parts.day;
+    collected.birthMonth = parts.month;
+    collected.birthYear = parts.year;
+    collected.birthDate = formatDateParts(parts.day, parts.month, parts.year);
+    applyDerivedDates();
+  }
+
+  function applyDerivedDates() {
+    var issue18 = addYearsToBirth(18);
+    var expiry23 = addYearsToBirth(23);
+    var expiry28 = addYearsToBirth(28);
+    if (!issue18) return;
+
+    if (docType === 'mdowod' || docType === 'dowod' || docType === 'prawojazdy' || docType === 'legszk' || docType === 'legstu') {
+      if (!collected.registrationDate) collected.registrationDate = issue18;
+      if (docType === 'mdowod') {
+        if (!collected.md_issueDate) collected.md_issueDate = issue18;
+        if (!collected.md_expiryDate) collected.md_expiryDate = expiry23;
+      }
+      if (docType === 'dowod') {
+        if (!collected.do_issueDate) collected.do_issueDate = issue18;
+        if (!collected.do_expiryDate) collected.do_expiryDate = expiry23;
+      }
+      if (docType === 'prawojazdy') {
+        if (!collected.pj_issueDate) collected.pj_issueDate = issue18;
+        if (!collected.pj_expiryDate) collected.pj_expiryDate = expiry28;
+      }
+      if (docType === 'legszk') {
+        if (!collected.legszk_issueDate) collected.legszk_issueDate = issue18;
+        if (!collected.legszk_expiryDate) collected.legszk_expiryDate = expiry28;
+      }
+      if (docType === 'legstu') {
+        if (!collected.legstu_issueDate) collected.legstu_issueDate = issue18;
+      }
+    }
   }
 
   function genPeselFromBirth() {
@@ -79,6 +194,156 @@
     s += ' ';
     for (var j = 0; j < 6; j++) s += Math.floor(Math.random() * 10);
     return s;
+  }
+
+  function genPostalCode() {
+    return pad2(randInt(0, 99)) + '-' + pad2(randInt(100, 999));
+  }
+
+  function genPjDocNumber() {
+    return randInt(10000, 99999) + '/' + pad2(randInt(1, 12)) + '/' + (collected.birthYear ? addYearsToBirth(18).split('.')[2] : randInt(2018, 2025));
+  }
+
+  function buildStepsForDoc(type) {
+    var extras = DOC_EXTRA_STEPS[type] || [];
+    return BASE_STEPS.concat(extras);
+  }
+
+  function hasExistingPhoto() {
+    try {
+      return !!(localStorage.getItem('profileImage') || localStorage.getItem('photo'));
+    } catch (_) { return false; }
+  }
+
+  function needsPhotoStep() {
+    if (docType === 'prawojazdy' || docType === 'legszk' || docType === 'legstu' || docType === 'diia') {
+      return !hasExistingPhoto();
+    }
+    return docType === 'mdowod' || docType === 'dowod';
+  }
+
+  function generateRandomForStep(step) {
+    if (!step) return false;
+
+    if (step.choices && step.choices.length) {
+      var choice = pick(step.choices);
+      collected[step.key] = choice.value;
+      return true;
+    }
+
+    switch (step.key) {
+      case 'firstName':
+        if (!collected.gender) collected.gender = pick(['M', 'K']);
+        collected.firstName = collected.gender === 'K' ? pick(FEMALE_NAMES) : pick(MALE_NAMES);
+        return true;
+      case 'lastName':
+        collected.lastName = pick(SURNAMES);
+        return true;
+      case 'gender':
+        collected.gender = pick(['M', 'K']);
+        return true;
+      case 'birthDate':
+        applyBirthParts(randomBirthParts());
+        return true;
+      case 'pesel':
+        if (!collected.birthDay) applyBirthParts(randomBirthParts());
+        if (!collected.gender) collected.gender = pick(['M', 'K']);
+        collected.pesel = genPeselFromBirth();
+        return true;
+      case 'nationality':
+        collected.nationality = 'POLSKIE';
+        return true;
+      case 'placeOfBirth':
+        collected.placeOfBirth = pick(CITIES);
+        return true;
+      case 'address': {
+        var city = pick(CITIES);
+        collected.address = 'ul. ' + pick(STREETS) + ' ' + randInt(1, 120) + ', ' + city;
+        if (!collected.postalcode) collected.postalcode = genPostalCode();
+        return true;
+      }
+      case 'postalcode':
+        collected.postalcode = genPostalCode();
+        return true;
+      case 'fathername':
+        collected.fathername = pick(MALE_NAMES);
+        return true;
+      case 'mothername':
+        collected.mothername = pick(FEMALE_NAMES);
+        return true;
+      case 'registrationDate':
+        if (!collected.birthDay) applyBirthParts(randomBirthParts());
+        collected.registrationDate = addYearsToBirth(18);
+        return true;
+      case 'md_idSeries':
+      case 'do_idSeries':
+        collected[step.key] = genDocSeries();
+        return true;
+      case 'md_issueDate':
+      case 'do_issueDate':
+      case 'pj_issueDate':
+      case 'legszk_issueDate':
+      case 'legstu_issueDate':
+        if (!collected.birthDay) applyBirthParts(randomBirthParts());
+        collected[step.key] = addYearsToBirth(18);
+        return true;
+      case 'md_expiryDate':
+        if (!collected.birthDay) applyBirthParts(randomBirthParts());
+        collected.md_expiryDate = addYearsToBirth(23);
+        return true;
+      case 'do_expiryDate':
+        if (!collected.birthDay) applyBirthParts(randomBirthParts());
+        collected.do_expiryDate = addYearsToBirth(23);
+        return true;
+      case 'pj_expiryDate':
+      case 'legszk_expiryDate':
+        if (!collected.birthDay) applyBirthParts(randomBirthParts());
+        collected[step.key] = addYearsToBirth(28);
+        return true;
+      case 'do_issuingAuthority':
+      case 'pj_issuingAuthority':
+        collected[step.key] = pick(AUTHORITIES);
+        return true;
+      case 'pj_category':
+        collected.pj_category = pick(PJ_CATEGORIES);
+        return true;
+      case 'pj_documentNumber':
+        if (!collected.birthDay) applyBirthParts(randomBirthParts());
+        collected.pj_documentNumber = genPjDocNumber();
+        return true;
+      case 'pj_blanketNumber':
+        collected.pj_blanketNumber = String(randInt(100000, 999999));
+        return true;
+      case 'pj_blanketStatus':
+        collected.pj_blanketStatus = 'Wydany';
+        return true;
+      case 'pj_restrictions':
+        collected.pj_restrictions = 'brak';
+        return true;
+      case 'legszk_cardNumber':
+        collected.legszk_cardNumber = randInt(1, 999) + '/' + new Date().getFullYear();
+        return true;
+      case 'legszk_schoolName':
+        collected.legszk_schoolName = 'Liceum Ogólnokształcące nr ' + randInt(1, 50) + ' w ' + pick(CITIES);
+        return true;
+      case 'legszk_schoolAddress':
+        collected.legszk_schoolAddress = 'ul. Szkolna ' + randInt(1, 50) + ', ' + pick(CITIES);
+        return true;
+      case 'legszk_schoolPhone':
+        collected.legszk_schoolPhone = '+48 ' + randInt(500, 799) + ' ' + randInt(100, 999) + ' ' + randInt(100, 999);
+        return true;
+      case 'legszk_schoolDirector':
+        collected.legszk_schoolDirector = pick(MALE_NAMES) + ' ' + pick(SURNAMES);
+        return true;
+      case 'legstu_uczelnia':
+        collected.legstu_uczelnia = 'Uniwersytet w ' + pick(CITIES);
+        return true;
+      case 'legstu_albumNumber':
+        collected.legstu_albumNumber = String(randInt(100000, 999999));
+        return true;
+      default:
+        return false;
+    }
   }
 
   async function sha256Hex(text) {
@@ -133,18 +398,23 @@
         var img = new Image();
         img.onload = function () {
           var canvas = document.createElement('canvas');
-          var MAX = 800;
+          var MAX = 1400;
           var w = img.width;
           var h = img.height;
-          if (w > h) { if (w > MAX) { h = h * MAX / w; w = MAX; } }
-          else { if (h > MAX) { w = w * MAX / h; h = MAX; } }
+          if (w > h) {
+            if (w > MAX) { h = Math.round(h * MAX / w); w = MAX; }
+          } else {
+            if (h > MAX) { w = Math.round(w * MAX / h); h = MAX; }
+          }
           canvas.width = w;
           canvas.height = h;
           var c = canvas.getContext('2d', { alpha: false });
+          c.imageSmoothingEnabled = true;
+          c.imageSmoothingQuality = 'high';
           c.fillStyle = '#ffffff';
           c.fillRect(0, 0, w, h);
           c.drawImage(img, 0, 0, w, h);
-          resolve(canvas.toDataURL('image/jpeg', 0.92));
+          resolve(canvas.toDataURL('image/jpeg', 0.96));
         };
         img.onerror = reject;
         img.src = e.target.result;
@@ -153,8 +423,6 @@
       reader.readAsDataURL(file);
     });
   }
-
-  function pad2(n) { return n < 10 ? '0' + n : '' + n; }
 
   function applyToLocalStorage(data) {
     if (data.firstName) localStorage.setItem('name', data.firstName);
@@ -168,12 +436,79 @@
     if (data.birthDay && data.birthMonth && data.birthYear) {
       localStorage.setItem('birthDate', pad2(data.birthDay) + '.' + pad2(data.birthMonth) + '.' + data.birthYear);
     }
-    ['fathername', 'mothername', 'fatherSurname', 'motherSurname', 'placeOfBirth',
-      'address', 'postalcode', 'registrationDate', 'md_idSeries', 'md_issueDate',
-      'md_expiryDate', 'do_idSeries', 'do_issueDate', 'do_expiryDate', 'do_issuingAuthority'
-    ].forEach(function (k) {
+    var keys = [
+      'fathername', 'mothername', 'fatherSurname', 'motherSurname', 'placeOfBirth',
+      'address', 'postalcode', 'registrationDate',
+      'md_idSeries', 'md_issueDate', 'md_expiryDate',
+      'do_idSeries', 'do_issueDate', 'do_expiryDate', 'do_issuingAuthority',
+      'pj_category', 'pj_documentNumber', 'pj_issueDate', 'pj_expiryDate',
+      'pj_issuingAuthority', 'pj_blanketNumber', 'pj_blanketStatus', 'pj_restrictions',
+      'legszk_cardNumber', 'legszk_issueDate', 'legszk_expiryDate',
+      'legszk_schoolName', 'legszk_schoolAddress', 'legszk_schoolPhone', 'legszk_schoolDirector',
+      'legstu_uczelnia', 'legstu_albumNumber', 'legstu_issueDate'
+    ];
+    keys.forEach(function (k) {
       if (data[k]) localStorage.setItem(k, data[k]);
     });
+
+    var pjMap = {
+      firstName: 'display-name_prawojazdy',
+      lastName: 'display-surname_prawojazdy',
+      pesel: 'display-pesel_prawojazdy',
+      placeOfBirth: 'display-birthPlace_prawojazdy',
+      pj_category: 'display-category_prawojazdy',
+      pj_expiryDate: 'display-expiryDate_prawojazdy',
+      pj_issueDate: 'display-issueDate_prawojazdy',
+      pj_blanketStatus: 'display-blanketStatus_prawojazdy',
+      pj_documentNumber: 'display-documentNumber_prawojazdy',
+      pj_blanketNumber: 'display-blanketNumber_prawojazdy',
+      pj_issuingAuthority: 'display-issuingAuthority_prawojazdy',
+      pj_restrictions: 'display-restrictions_prawojazdy'
+    };
+    Object.keys(pjMap).forEach(function (k) {
+      if (data[k]) localStorage.setItem(pjMap[k], data[k]);
+    });
+    if (data.birthDay && data.birthMonth && data.birthYear) {
+      var bdStr = pad2(data.birthDay) + '.' + pad2(data.birthMonth) + '.' + data.birthYear;
+      localStorage.setItem('display-birthDate_prawojazdy', bdStr);
+      localStorage.setItem('display-birthDate_legszk', bdStr);
+      localStorage.setItem('display-birthDate_legstu', bdStr);
+      localStorage.setItem('diia_birthDate', bdStr);
+    }
+    if (data.firstName) localStorage.setItem('diia_name', data.firstName);
+    if (data.lastName) localStorage.setItem('diia_surname', data.lastName);
+    if (data.pesel) localStorage.setItem('diia_pesel', data.pesel);
+    if (data.nationality) localStorage.setItem('diia_nationality', data.nationality);
+    if (data.placeOfBirth) localStorage.setItem('diia_placeOfBirth', data.placeOfBirth);
+
+    var legSzkMap = {
+      firstName: 'display-name_legszk',
+      lastName: 'display-surname_legszk',
+      pesel: 'display-pesel_legszk',
+      legszk_cardNumber: 'display-cardNumber_legszk',
+      legszk_issueDate: 'display-issueDate_legszk',
+      legszk_expiryDate: 'display-expiryDate_legszk',
+      legszk_schoolName: 'display-schoolName_legszk',
+      legszk_schoolAddress: 'display-schoolAddress_legszk',
+      legszk_schoolPhone: 'display-schoolPhone_legszk',
+      legszk_schoolDirector: 'display-schoolDirector_legszk'
+    };
+    Object.keys(legSzkMap).forEach(function (k) {
+      if (data[k]) localStorage.setItem(legSzkMap[k], data[k]);
+    });
+
+    var legStuMap = {
+      firstName: 'display-name_legstu',
+      lastName: 'display-surname_legstu',
+      pesel: 'display-pesel_legstu',
+      legstu_uczelnia: 'display-uczelnia_legstu',
+      legstu_albumNumber: 'display-albumNumber_legstu',
+      legstu_issueDate: 'display-dataWydania_legstu'
+    };
+    Object.keys(legStuMap).forEach(function (k) {
+      if (data[k]) localStorage.setItem(legStuMap[k], data[k]);
+    });
+
     if (data.photo) {
       localStorage.setItem('profileImage', data.photo);
       if ('caches' in window) {
@@ -198,7 +533,8 @@
       'kod pocztowy': 'postalcode', 'imię ojca': 'fathername', 'imie ojca': 'fathername',
       'imię matki': 'mothername', 'imie matki': 'mothername',
       'seria mdowodu': 'md_idSeries', 'mdowód': 'md_idSeries', 'mdowod': 'md_idSeries',
-      'dowód': 'do_idSeries', 'dowod': 'do_idSeries'
+      'dowód': 'do_idSeries', 'dowod': 'do_idSeries',
+      'kategoria': 'pj_category', 'kategoria pj': 'pj_category'
     };
     var result = {};
     lines.forEach(function (line) {
@@ -221,6 +557,10 @@
       parseBirthDate(data.birthDate);
       delete data.birthDate;
     }
+    applyDerivedDates();
+    Object.keys(data).forEach(function (k) {
+      if (data[k] === undefined || data[k] === null) delete data[k];
+    });
     return data;
   }
 
@@ -266,9 +606,19 @@
     if (ctx && ctx.dodajWiadomosc) ctx.dodajWiadomosc(html, 'bot', actions || null);
   }
 
+  function afterStepAdvance() {
+    if (stepIndex >= STEPS.length) {
+      if (needsPhotoStep()) askPhoto();
+      else finalizeAndSave();
+      return;
+    }
+    askCurrentStep();
+  }
+
   function askCurrentStep() {
     if (stepIndex >= STEPS.length) {
-      askPhoto();
+      if (needsPhotoStep()) askPhoto();
+      else finalizeAndSave();
       return;
     }
     var step = STEPS[stepIndex];
@@ -282,12 +632,10 @@
     if (step.optional) {
       actions.push({ label: 'Pomiń', value: '__skip__', ghost: true });
     }
-    if (step.random) {
-      actions.push({ label: '⚡ Wygeneruj losowo', value: '__random__', random: true, utility: true });
-    }
+    actions.push({ label: '⚡ Wygeneruj losowo', value: '__random__', random: true, utility: true });
 
     var hint = step.placeholder ? ' <em>(' + step.placeholder + ')</em>' : '';
-  var req = step.required ? '' : ' <span style="color:var(--text-muted)">(opcjonalnie)</span>';
+    var req = step.required ? '' : ' <span style="color:var(--text-muted)">(opcjonalnie)</span>';
     say('<strong>' + step.label + '</strong>' + req + hint + '<br>Wpisz wartość poniżej lub wybierz przycisk.', actions);
     if (ctx && ctx.setInputPlaceholder) {
       ctx.setInputPlaceholder(step.placeholder || 'Wpisz odpowiedź…');
@@ -295,8 +643,11 @@
   }
 
   function askPhoto() {
+    var extra = hasExistingPhoto()
+      ? '<br><em>Masz już zdjęcie z wcześniejszego dokumentu — możesz je pominąć.</em>'
+      : '';
     say(
-      'Na koniec dodaj <strong>zdjęcie profilowe</strong>.<br>' +
+      'Na koniec dodaj <strong>zdjęcie profilowe</strong>.' + extra + '<br>' +
       'Kliknij przycisk poniżej, aby wybrać plik z galerii.',
       [
         { label: '📷 Wybierz zdjęcie', value: '__pick_photo__' },
@@ -306,10 +657,19 @@
     if (ctx && ctx.setInputPlaceholder) ctx.setInputPlaceholder('Wybierz zdjęcie przyciskiem powyżej…');
   }
 
+  function askDocType() {
+    var actions = DOC_TYPES.map(function (d) {
+      return { label: d.label, value: '__doc_' + d.id };
+    });
+    actions.push({ label: 'Anuluj kreator', value: '__cancel__', ghost: true, utility: true });
+    say('Wybierz <strong>typ dokumentu</strong>, dla którego chcesz wygenerować dane:', actions);
+    if (ctx && ctx.setInputPlaceholder) ctx.setInputPlaceholder('Wybierz typ dokumentu…');
+  }
+
   function askPasteMode() {
     say(
       'Wklej dane w formacie <code>Imię: Jan</code> (każda linia osobno).<br>' +
-      'Przykład:<br><code>Imię: Jan<br>Nazwisko: Kowalski<br>PESEL: 12345678901<br>Data urodzenia: 01.01.1990<br>Płeć: M</code>',
+      'Przykład:<br><code>Imię: Jan<br>Nazwisko: Kowalski<br>PESEL: 12345678901<br>Data urodzenia: 01.01.2006<br>Płeć: M</code>',
       [{ label: 'Anuluj kreator', value: '__cancel__', ghost: true, utility: true }]
     );
     if (ctx && ctx.setInputPlaceholder) ctx.setInputPlaceholder('Wklej dane tutaj…');
@@ -318,7 +678,10 @@
   function startWizard() {
     active = true;
     stepIndex = 0;
+    mode = 'pick_doc';
+    docType = null;
     collected = {};
+    STEPS = [];
     if (ctx && ctx.hideSuggestion) ctx.hideSuggestion();
 
     say(
@@ -336,7 +699,9 @@
   function finishWizard() {
     active = false;
     mode = null;
+    docType = null;
     stepIndex = 0;
+    STEPS = [];
     if (ctx && ctx.setInputPlaceholder) ctx.setInputPlaceholder('Wpisz pytanie');
   }
 
@@ -345,8 +710,9 @@
     var result = await saveToNeon();
     finishWizard();
     if (result.ok) {
+      var docLabel = (DOC_TYPES.find(function (d) { return d.id === docType; }) || {}).label || 'dokument';
       say(
-        '✅ <strong>Gotowe!</strong> Dane i zdjęcie zapisane w bazie Neon.<br>' +
+        '✅ <strong>Gotowe!</strong> Dane dla <strong>' + docLabel + '</strong> zapisane w bazie.<br>' +
         'Możesz je podejrzeć komendą <code>/pokaz</code> lub edytować przez <code>/dane</code>.'
       );
     } else {
@@ -367,15 +733,17 @@
     if (step.parse) {
       var parsed = step.parse(val);
       if (parsed.error) { say('⚠️ ' + parsed.error); return; }
+      applyDerivedDates();
     } else if (step.key !== 'birthDate') {
       collected[step.key] = val || step.default || '';
     } else {
       collected.birthDate = val;
+      parseBirthDate(val);
+      applyDerivedDates();
     }
 
     stepIndex += 1;
-    if (stepIndex >= STEPS.length) askPhoto();
-    else askCurrentStep();
+    afterStepAdvance();
   }
 
   function handlePasteInput(text) {
@@ -389,10 +757,12 @@
       var g = String(parsed.gender).toUpperCase();
       collected.gender = g.startsWith('M') ? 'M' : g.startsWith('K') ? 'K' : parsed.gender;
     }
-    if (parsed.birthDate) parseBirthDate(parsed.birthDate);
-    mode = 'steps';
-    stepIndex = STEPS.length;
-    askPhoto();
+    if (parsed.birthDate) {
+      parseBirthDate(parsed.birthDate);
+      applyDerivedDates();
+    }
+    mode = 'pick_doc';
+    askDocType();
   }
 
   function bindPhotoInput() {
@@ -444,9 +814,8 @@
       }
 
       if (t === '__mode_steps__') {
-        mode = 'steps';
-        stepIndex = 0;
-        askCurrentStep();
+        mode = 'pick_doc';
+        askDocType();
         return;
       }
 
@@ -456,31 +825,33 @@
         return;
       }
 
+      if (t.indexOf('__doc_') === 0) {
+        docType = t.slice(6);
+        STEPS = buildStepsForDoc(docType);
+        mode = 'steps';
+        stepIndex = 0;
+        var label = (DOC_TYPES.find(function (d) { return d.id === docType; }) || {}).label || docType;
+        say('Tworzę dane dla: <strong>' + label + '</strong>. Wiek losowy: 18–20 lat. Daty wydania i zameldowania = data urodzenia + 18 lat.');
+        askCurrentStep();
+        return;
+      }
+
       if (t === '__skip__') {
         stepIndex += 1;
-        if (stepIndex >= STEPS.length) askPhoto();
-        else askCurrentStep();
+        afterStepAdvance();
         return;
       }
 
       if (t === '__random__') {
         var step = STEPS[stepIndex];
-        if (step && step.key === 'pesel') {
-          var p = genPeselFromBirth();
-          if (!p) { say('⚠️ Najpierw podaj datę urodzenia i płeć.'); return; }
-          collected.pesel = p;
-          stepIndex += 1;
-          if (stepIndex >= STEPS.length) askPhoto();
-          else askCurrentStep();
+        if (!step) return;
+        if (!generateRandomForStep(step)) {
+          say('⚠️ Nie udało się wygenerować losowej wartości dla tego pola.');
           return;
         }
-        if (step && (step.key === 'md_idSeries' || step.key === 'do_idSeries')) {
-          collected[step.key] = genDocSeries();
-          stepIndex += 1;
-          if (stepIndex >= STEPS.length) askPhoto();
-          else askCurrentStep();
-          return;
-        }
+        if (step.key === 'birthDate' || step.key === 'pesel') applyDerivedDates();
+        stepIndex += 1;
+        afterStepAdvance();
         return;
       }
 
@@ -500,24 +871,20 @@
       }
 
       if (mode === 'steps') {
-        handleStepsInput(t);
-        return;
-      }
-
-      // Wybór z przycisków (płeć itd.)
-      if (stepIndex < STEPS.length) {
-        var current = STEPS[stepIndex];
-        if (current.choices) {
-          var match = current.choices.find(function (c) { return c.value === t || c.label === t; });
-          if (match) {
-            collected[current.key] = match.value;
-            stepIndex += 1;
-            if (stepIndex >= STEPS.length) askPhoto();
-            else askCurrentStep();
-            return;
+        if (stepIndex < STEPS.length) {
+          var current = STEPS[stepIndex];
+          if (current.choices) {
+            var match = current.choices.find(function (c) { return c.value === t || c.label === t; });
+            if (match) {
+              collected[current.key] = match.value;
+              stepIndex += 1;
+              afterStepAdvance();
+              return;
+            }
           }
         }
         handleStepsInput(t);
+        return;
       }
     }
   };

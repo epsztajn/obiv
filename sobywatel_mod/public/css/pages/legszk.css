@@ -607,8 +607,7 @@ footer {
 
 .photo {
   will-change: opacity;
-  image-rendering: -webkit-optimize-contrast;
-  image-rendering: crisp-edges;
+  image-rendering: auto;
 }
 
 #profileImage {
