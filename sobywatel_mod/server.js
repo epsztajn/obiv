@@ -2,7 +2,7 @@ const express = require('express');
 const path = require('path');
 const { neon } = require('@neondatabase/serverless');
 const crypto = require('crypto');
-// nodemailer removed — using Resend HTTP API
+const nodemailer = require('nodemailer');
 
 const app = express();
 app.use(express.json());
@@ -10,40 +10,36 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 const sql = neon(process.env.DATABASE_URL);
 
-// ─── Resend email ─────────────────────────────────────────────────────────────
-async function sendVerificationEmail(toEmail, code) {
-  if (!process.env.RESEND_API_KEY) {
-    console.warn('RESEND_API_KEY not set — skipping email');
-    return;
-  }
-  const html = `
-    <div style="font-family:Roboto,Arial,sans-serif;max-width:480px;margin:auto;padding:32px 24px;background:#f5f7fa;border-radius:16px;">
-      <h2 style="margin:0 0 8px;color:#111827;">Weryfikacja e-mail</h2>
-      <p style="color:#6b7280;margin:0 0 24px;">Wpisz poniższy kod na stronie aktywacji, aby potwierdzić swój adres e-mail i ustawić hasło.</p>
-      <div style="background:#fff;border-radius:12px;padding:24px 20px;border:1px solid #e5e7eb;margin-bottom:24px;text-align:center;">
-        <div style="font-size:12px;color:#9ca3af;margin-bottom:8px;letter-spacing:1px;">KOD WERYFIKACYJNY</div>
-        <div style="font-family:monospace;font-size:36px;font-weight:700;letter-spacing:8px;color:#111827;">${code}</div>
-      </div>
-      <p style="font-size:13px;color:#9ca3af;margin:0;">Kod jest ważny przez 15 minut. Jeśli nie próbowałeś/aś aktywować konta, zignoruj tę wiadomość.</p>
-    </div>
-  `;
-  const res = await fetch('https://api.resend.com/emails', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      from: 'sObywatel <onboarding@resend.dev>',
-      to: toEmail,
-      subject: '\u{1F510} Tw\u00F3j kod weryfikacyjny sObywatel',
-      html,
-    }),
+// ─── Brevo SMTP ───────────────────────────────────────────────────────────────
+function getMailer() {
+  if (!process.env.BREVO_USER || !process.env.BREVO_PASS) return null;
+  return nodemailer.createTransport({
+    host: 'smtp-relay.brevo.com',
+    port: 587,
+    secure: false,
+    auth: { user: process.env.BREVO_USER, pass: process.env.BREVO_PASS },
   });
-  if (!res.ok) {
-    const err = await res.text();
-    throw new Error(`Resend error: ${err}`);
-  }
+}
+
+async function sendVerificationEmail(toEmail, code) {
+  const mailer = getMailer();
+  if (!mailer) { console.warn('BREVO_USER/BREVO_PASS not set — skipping email'); return; }
+  await mailer.sendMail({
+    from: `"sObywatel" <${process.env.BREVO_USER}>`,
+    to: toEmail,
+    subject: 'Twój kod weryfikacyjny sObywatel',
+    html: `
+      <div style="font-family:Roboto,Arial,sans-serif;max-width:480px;margin:auto;padding:32px 24px;background:#f5f7fa;border-radius:16px;">
+        <h2 style="margin:0 0 8px;color:#111827;">Weryfikacja e-mail</h2>
+        <p style="color:#6b7280;margin:0 0 24px;">Wpisz poniższy kod na stronie aktywacji, aby potwierdzić swój adres e-mail i ustawić hasło.</p>
+        <div style="background:#fff;border-radius:12px;padding:24px 20px;border:1px solid #e5e7eb;margin-bottom:24px;text-align:center;">
+          <div style="font-size:12px;color:#9ca3af;margin-bottom:8px;letter-spacing:1px;">KOD WERYFIKACYJNY</div>
+          <div style="font-family:monospace;font-size:36px;font-weight:700;letter-spacing:8px;color:#111827;">${code}</div>
+        </div>
+        <p style="font-size:13px;color:#9ca3af;margin:0;">Kod jest wazny przez 15 minut.</p>
+      </div>
+    `,
+  });
 }
 
 // ─── Rate limiting ────────────────────────────────────────────────────────────
