@@ -9,8 +9,7 @@
   },
   "dependencies": {
     "@neondatabase/serverless": "^0.10.4",
-    "express": "^4.21.2",
-    "nodemailer": "^6.9.14"
+    "express": "^4.21.2"
   },
   "engines": {
     "node": ">=18"
