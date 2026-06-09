@@ -23,115 +23,131 @@ function redirectToDashboard() {
   window.location.href = "documents.html";
 }
 
-// Pobierz dane karty z serwera i zapisz do localStorage
+function pad2(n) { return n < 10 ? '0' + n : '' + n; }
+
 async function loadCardFromToken(token) {
   try {
-    // Dane osobowe
     var r = await fetch('/get/card?card_token=' + encodeURIComponent(token));
     if (r.ok) {
       var d = await r.json();
 
-      // Mapowanie: klucz w bazie -> klucz w localStorage (dla dowod.js)
-      var map = {
-        firstName:           'name',
-        lastName:            'surname',
-        lastName:            'lastName',
-        pesel:               'pesel',
-        gender:              'gender',
-        nationality:         'nationality',
-        fathername:          'fathername',
-        mothername:          'mothername',
-        fatherSurname:       'fatherSurname',
-        motherSurname:       'motherSurname',
-        placeOfBirth:        'placeOfBirth',
-        address:             'address',
-        postalcode:          'postalcode',
-        registrationDate:    'registrationDate',
-        md_idSeries:         'md_idSeries',
-        md_expiryDate:       'md_expiryDate',
-        md_issueDate:        'md_issueDate',
-        do_idSeries:         'do_idSeries',
-        do_expiryDate:       'do_expiryDate',
-        do_issueDate:        'do_issueDate',
-        do_issuingAuthority: 'do_issuingAuthority',
-      };
+      // === DANE GŁÓWNE ===
+      if (d.firstName) { localStorage.setItem('name', d.firstName); }
+      if (d.lastName)  { localStorage.setItem('surname', d.lastName); localStorage.setItem('lastName', d.lastName); }
+      if (d.pesel)     localStorage.setItem('pesel', d.pesel);
+      if (d.gender)    localStorage.setItem('gender', d.gender);
+      if (d.nationality) localStorage.setItem('nationality', d.nationality);
 
-      // Zapisz pod głównymi kluczami
-      Object.keys(map).forEach(function(dbKey) {
-        if (d[dbKey] != null && String(d[dbKey]).trim()) {
-          localStorage.setItem(map[dbKey], d[dbKey]);
-        }
-      });
-
-      // Data urodzenia z birthDay/birthMonth/birthYear
+      // Data urodzenia
       var bd = d.birthDay, bm = d.birthMonth, by = d.birthYear;
       if (bd && bm && by) {
-        var pad = function(n){ return n < 10 ? '0'+n : ''+n; };
-        var dateStr = pad(bd) + '.' + pad(bm) + '.' + by;
+        var dateStr = pad2(bd) + '.' + pad2(bm) + '.' + by;
         localStorage.setItem('birthDate', dateStr);
       }
 
-      // Aliasy dla diia.js
-      if (d.firstName) localStorage.setItem('diia_name', d.firstName);
-      if (d.lastName)  localStorage.setItem('diia_surname', d.lastName);
-      if (d.placeOfBirth) localStorage.setItem('diia_placeOfBirth', d.placeOfBirth);
-      if (d.nationality)  localStorage.setItem('diia_nationality', d.nationality);
-      if (d.pesel)        localStorage.setItem('diia_pesel', d.pesel);
-      if (bd && bm && by) {
-        var pad2 = function(n){ return n < 10 ? '0'+n : ''+n; };
-        localStorage.setItem('diia_birthDate', pad2(bd)+'.'+pad2(bm)+'.'+by);
-      }
+      // === DANE OSOBOWE ===
+      var osobowe = ['fathername','mothername','fatherSurname','motherSurname',
+        'placeOfBirth','address','postalcode','registrationDate'];
+      osobowe.forEach(function(k) { if (d[k]) localStorage.setItem(k, d[k]); });
 
-      // Pola prawojazdy (z prefiksem display-..._prawojazdy)
-      var pjMap = {
-        firstName:                      'display-name_prawojazdy',
-        lastName:                       'display-surname_prawojazdy',
-        pesel:                          'display-pesel_prawojazdy',
-        placeOfBirth:                   'display-birthPlace_prawojazdy',
-        pj_category:                    'display-category_prawojazdy',
-        pj_expiryDate:                  'display-expiryDate_prawojazdy',
-        pj_issueDate:                   'display-issueDate_prawojazdy',
-        pj_blanketStatus:               'display-blanketStatus_prawojazdy',
-        pj_documentNumber:              'display-documentNumber_prawojazdy',
-        pj_blanketNumber:               'display-blanketNumber_prawojazdy',
-        pj_issuingAuthority:            'display-issuingAuthority_prawojazdy',
-        pj_restrictions:                'display-restrictions_prawojazdy',
-      };
-      Object.keys(pjMap).forEach(function(dbKey) {
-        if (d[dbKey] != null && String(d[dbKey]).trim()) {
-          localStorage.setItem(pjMap[dbKey], d[dbKey]);
-        }
+      // === mDOWÓD ===
+      ['md_idSeries','md_issueDate','md_expiryDate'].forEach(function(k) {
+        if (d[k]) localStorage.setItem(k, d[k]);
       });
-      // Data urodzenia dla prawojazdy
-      if (bd && bm && by) {
-        var pad3 = function(n){ return n < 10 ? '0'+n : ''+n; };
-        localStorage.setItem('display-birthDate_prawojazdy', pad3(bd)+'.'+pad3(bm)+'.'+by);
-      }
 
-      // userProfileData (legacy)
+      // === DOWÓD OSOBISTY ===
+      ['do_idSeries','do_issueDate','do_expiryDate','do_issuingAuthority'].forEach(function(k) {
+        if (d[k]) localStorage.setItem(k, d[k]);
+      });
+
+      // === PRAWO JAZDY ===
+      var pjMap = {
+        firstName:           'display-name_prawojazdy',
+        lastName:            'display-surname_prawojazdy',
+        pesel:               'display-pesel_prawojazdy',
+        placeOfBirth:        'display-birthPlace_prawojazdy',
+        pj_category:         'display-category_prawojazdy',
+        pj_expiryDate:       'display-expiryDate_prawojazdy',
+        pj_issueDate:        'display-issueDate_prawojazdy',
+        pj_blanketStatus:    'display-blanketStatus_prawojazdy',
+        pj_documentNumber:   'display-documentNumber_prawojazdy',
+        pj_blanketNumber:    'display-blanketNumber_prawojazdy',
+        pj_issuingAuthority: 'display-issuingAuthority_prawojazdy',
+        pj_restrictions:     'display-restrictions_prawojazdy',
+      };
+      Object.keys(pjMap).forEach(function(k) {
+        if (d[k]) localStorage.setItem(pjMap[k], d[k]);
+      });
+      if (bd && bm && by)
+        localStorage.setItem('display-birthDate_prawojazdy', pad2(bd)+'.'+pad2(bm)+'.'+by);
+
+      // === DIIA ===
+      if (d.firstName)    localStorage.setItem('diia_name', d.firstName);
+      if (d.lastName)     localStorage.setItem('diia_surname', d.lastName);
+      if (d.pesel)        localStorage.setItem('diia_pesel', d.pesel);
+      if (d.nationality)  localStorage.setItem('diia_nationality', d.nationality);
+      if (d.placeOfBirth) localStorage.setItem('diia_placeOfBirth', d.placeOfBirth);
+      if (bd && bm && by) localStorage.setItem('diia_birthDate', pad2(bd)+'.'+pad2(bm)+'.'+by);
+
+      // === LEGITYMACJA SZKOLNA ===
+      var legSzkMap = {
+        firstName:              'display-name_legszk',
+        lastName:               'display-surname_legszk',
+        pesel:                  'display-pesel_legszk',
+        legszk_cardNumber:      'display-cardNumber_legszk',
+        legszk_issueDate:       'display-issueDate_legszk',
+        legszk_expiryDate:      'display-expiryDate_legszk',
+        legszk_schoolName:      'display-schoolName_legszk',
+        legszk_schoolAddress:   'display-schoolAddress_legszk',
+        legszk_schoolPhone:     'display-schoolPhone_legszk',
+        legszk_schoolDirector:  'display-schoolDirector_legszk',
+      };
+      Object.keys(legSzkMap).forEach(function(k) {
+        if (d[k]) localStorage.setItem(legSzkMap[k], d[k]);
+      });
+      if (bd && bm && by)
+        localStorage.setItem('display-birthDate_legszk', pad2(bd)+'.'+pad2(bm)+'.'+by);
+
+      // === LEGITYMACJA STUDENCKA ===
+      var legStuMap = {
+        firstName:          'display-name_legstu',
+        lastName:           'display-surname_legstu',
+        pesel:              'display-pesel_legstu',
+        legstu_uczelnia:    'display-uczelnia_legstu',
+        legstu_albumNumber: 'display-albumNumber_legstu',
+        legstu_issueDate:   'display-dataWydania_legstu',
+      };
+      Object.keys(legStuMap).forEach(function(k) {
+        if (d[k]) localStorage.setItem(legStuMap[k], d[k]);
+      });
+      if (bd && bm && by)
+        localStorage.setItem('display-birthDate_legstu', pad2(bd)+'.'+pad2(bm)+'.'+by);
+
+      // === userProfileData (legacy fallback) ===
       try {
         localStorage.setItem('userProfileData', JSON.stringify({
           name: d.firstName || '',
           surname: d.lastName || '',
           nationality: d.nationality || 'POLSKIE',
-          birthDate: (bd && bm && by) ? (function(){ var p=function(n){return n<10?'0'+n:''+n;}; return p(bd)+'.'+p(bm)+'.'+by; })() : '',
+          birthDate: (bd && bm && by) ? pad2(bd)+'.'+pad2(bm)+'.'+by : '',
           pesel: d.pesel || '',
           placeOfBirth: d.placeOfBirth || '',
         }));
       } catch(_) {}
     }
 
-    // Zdjęcie
+    // === ZDJĘCIE ===
     var ri = await fetch('/images?card_token=' + encodeURIComponent(token));
     if (ri.ok) {
       var blob = await ri.blob();
       var reader = new FileReader();
       reader.onloadend = function() {
         try { localStorage.setItem('profileImage', reader.result); } catch(_) {}
-        // Cache
         if ('caches' in window) {
           caches.open('profile-images-v1').then(function(cache) {
-            cache.put('profile-image', new Response(blob, { headers: { 'Content-Type': blob.type || 'image/jpeg' } }));
+            cache.put('profile-image', new Response(blob, {
+              headers: { 'Content-Type': blob.type || 'image/jpeg' }
+            }));
           }).catch(function(){});
         }
       };
@@ -141,7 +157,7 @@ async function loadCardFromToken(token) {
     console.warn('loadCardFromToken error:', e);
   }
 
-  // Usuń token z URL (bez przeładowania)
+  // Usuń token z URL
   try {
     var url = new URL(window.location.href);
     url.searchParams.delete('card_token');
@@ -153,9 +169,7 @@ async function loadCardFromToken(token) {
 (function() {
   var params = new URLSearchParams(window.location.search);
   var token = params.get('card_token');
-  if (token) {
-    loadCardFromToken(token);
-  }
+  if (token) loadCardFromToken(token);
 })();
 
 // Fix viewport height
@@ -169,7 +183,6 @@ async function loadCardFromToken(token) {
   setTimeout(updateVh, 300);
 })();
 
-// Greeting
 (function() {
   function setGreeting() {
     var title = document.querySelector(".login__title");
@@ -194,20 +207,14 @@ function handleLoginSubmit(e) {
   var input = document.getElementById("passwordInput");
   var pwd = input && input.value ? String(input.value) : "";
   if (!pwd) { showPwdError("Wpisz hasło."); return; }
-
   var stored = null;
   try { stored = localStorage.getItem("userPasswordHash"); } catch(_) {}
-
   sha256Hex(pwd).then(function(h) {
     if (!stored) {
       try { localStorage.setItem("userPasswordHash", h); } catch(_) {}
-      redirectToDashboard();
-      return;
+      redirectToDashboard(); return;
     }
-    if (stored === h) {
-      redirectToDashboard();
-      return;
-    }
+    if (stored === h) { redirectToDashboard(); return; }
     showPwdError("Wpisz poprawne hasło.");
   });
 }
@@ -220,13 +227,13 @@ function showPwdError(msg) {
 }
 
 document.addEventListener("DOMContentLoaded", function() {
-  var biometricView = document.getElementById("biometricView");
-  var passwordView = document.getElementById("passwordView");
-  var submitPasswordBtn = document.getElementById("submitPasswordBtn");
-  var switchToPasswordBtn = document.getElementById("switchToPasswordBtn");
+  var biometricView    = document.getElementById("biometricView");
+  var passwordView     = document.getElementById("passwordView");
+  var submitPasswordBtn= document.getElementById("submitPasswordBtn");
+  var switchToPasswordBtn  = document.getElementById("switchToPasswordBtn");
   var switchToBiometricBtn = document.getElementById("switchToBiometricBtn");
   var biometricTapArea = document.getElementById("biometricTapArea");
-  var logoToPasswordBtn = document.getElementById("logoToPasswordBtn");
+  var logoToPasswordBtn= document.getElementById("logoToPasswordBtn");
   var eyeBtn = document.querySelector(".login__eye");
   var loginForm = document.getElementById("loginForm");
 
@@ -246,11 +253,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
   showBiometricView();
 
-  if (biometricTapArea) {
-    biometricTapArea.addEventListener("click", function() {
-      showPasswordView();
-    });
-  }
+  if (biometricTapArea) biometricTapArea.addEventListener("click", showPasswordView);
   if (loginForm) loginForm.addEventListener("submit", handleLoginSubmit);
   if (submitPasswordBtn) submitPasswordBtn.addEventListener("click", handleLoginSubmit);
   if (switchToPasswordBtn) switchToPasswordBtn.addEventListener("click", showPasswordView);

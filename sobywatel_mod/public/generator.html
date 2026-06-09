@@ -310,6 +310,59 @@
         <div class="photo-text" id="photoText">📷 Kliknij lub przeciągnij zdjęcie</div>
       </div>
     </div>
+
+    <!-- Legitymacja szkolna -->
+    <div class="section-header" style="font-size:13px;font-weight:700;color:var(--muted);margin:18px 0 10px;border-top:1px solid var(--border);padding-top:14px;">🏫 Legitymacja szkolna</div>
+    <div class="field">
+      <label>Nazwa szkoły</label>
+      <input type="text" id="fSchoolName" placeholder="Szkoła Podstawowa nr 1 w Warszawie" maxlength="100"/>
+    </div>
+    <div class="field">
+      <label>Adres szkoły</label>
+      <input type="text" id="fSchoolAddress" placeholder="ul. Szkolna 1, 00-000 Warszawa" maxlength="150"/>
+    </div>
+    <div class="row2">
+      <div class="field">
+        <label>Telefon szkoły</label>
+        <input type="text" id="fSchoolPhone" placeholder="+48 22 000 00 00" maxlength="30"/>
+      </div>
+      <div class="field">
+        <label>Dyrektor szkoły</label>
+        <input type="text" id="fSchoolDirector" placeholder="Jan Kowalski" maxlength="80"/>
+      </div>
+    </div>
+    <div class="row2">
+      <div class="field">
+        <label>Numer legitymacji szkolnej</label>
+        <input type="text" id="fLegSzkCardNumber" placeholder="np. 12345" maxlength="20"/>
+      </div>
+      <div class="field">
+        <label>Data wydania leg. szk.</label>
+        <input type="text" id="fLegSzkIssueDate" placeholder="DD.MM.YYYY" maxlength="10"/>
+      </div>
+    </div>
+    <div class="field">
+      <label>Data ważności leg. szk.</label>
+      <input type="text" id="fLegSzkExpiryDate" placeholder="DD.MM.YYYY" maxlength="10"/>
+    </div>
+
+    <!-- Legitymacja studencka -->
+    <div class="section-header" style="font-size:13px;font-weight:700;color:var(--muted);margin:18px 0 10px;border-top:1px solid var(--border);padding-top:14px;">🎓 Legitymacja studencka</div>
+    <div class="field">
+      <label>Nazwa uczelni</label>
+      <input type="text" id="fUczelnia" placeholder="Uniwersytet Warszawski" maxlength="100"/>
+    </div>
+    <div class="row2">
+      <div class="field">
+        <label>Numer albumu</label>
+        <input type="text" id="fAlbumNumber" placeholder="np. 123456" maxlength="20"/>
+      </div>
+      <div class="field">
+        <label>Data wydania leg. std.</label>
+        <input type="text" id="fLegStuIssueDate" placeholder="DD.MM.YYYY" maxlength="10"/>
+      </div>
+    </div>
+
     <div id="formMsg"></div>
     <button class="btn btn-primary" id="submitBtn" onclick="submitCard()">Zatwierdź</button>
     <div id="cancelEditWrap" style="display:none;margin-top:10px">
@@ -519,6 +572,22 @@
       pj_documentNumber, pj_blanketNumber, pj_category, pj_blanketStatus,
       pj_issueDate, pj_expiryDate, pj_issuingAuthority, pj_restrictions
     };
+
+    // Legitymacja szkolna
+    const legszk_schoolName    = document.getElementById('fSchoolName')?.value.trim() || '';
+    const legszk_schoolAddress = document.getElementById('fSchoolAddress')?.value.trim() || '';
+    const legszk_schoolPhone   = document.getElementById('fSchoolPhone')?.value.trim() || '';
+    const legszk_schoolDirector= document.getElementById('fSchoolDirector')?.value.trim() || '';
+    const legszk_cardNumber    = document.getElementById('fLegSzkCardNumber')?.value.trim() || '';
+    const legszk_issueDate     = document.getElementById('fLegSzkIssueDate')?.value.trim() || '';
+    const legszk_expiryDate    = document.getElementById('fLegSzkExpiryDate')?.value.trim() || '';
+    if (legszk_schoolName) Object.assign(data, { legszk_schoolName, legszk_schoolAddress, legszk_schoolPhone, legszk_schoolDirector, legszk_cardNumber, legszk_issueDate, legszk_expiryDate });
+
+    // Legitymacja studencka
+    const legstu_uczelnia      = document.getElementById('fUczelnia')?.value.trim() || '';
+    const legstu_albumNumber   = document.getElementById('fAlbumNumber')?.value.trim() || '';
+    const legstu_issueDate     = document.getElementById('fLegStuIssueDate')?.value.trim() || '';
+    if (legstu_uczelnia) Object.assign(data, { legstu_uczelnia, legstu_albumNumber, legstu_issueDate });
     if (photoBase64) data.photo = photoBase64;
 
     const btn = document.getElementById('submitBtn');
@@ -614,6 +683,16 @@
       document.getElementById('fPjExpiryDate').value     = fullData.pj_expiryDate     || '';
       document.getElementById('fPjIssuingAuthority').value = fullData.pj_issuingAuthority || '';
       document.getElementById('fPjRestrictions').value   = fullData.pj_restrictions   || '';
+      document.getElementById('fSchoolName').value        = fullData.legszk_schoolName     || '';
+      document.getElementById('fSchoolAddress').value     = fullData.legszk_schoolAddress  || '';
+      document.getElementById('fSchoolPhone').value       = fullData.legszk_schoolPhone    || '';
+      document.getElementById('fSchoolDirector').value    = fullData.legszk_schoolDirector || '';
+      document.getElementById('fLegSzkCardNumber').value  = fullData.legszk_cardNumber     || '';
+      document.getElementById('fLegSzkIssueDate').value   = fullData.legszk_issueDate      || '';
+      document.getElementById('fLegSzkExpiryDate').value  = fullData.legszk_expiryDate     || '';
+      document.getElementById('fUczelnia').value          = fullData.legstu_uczelnia        || '';
+      document.getElementById('fAlbumNumber').value       = fullData.legstu_albumNumber     || '';
+      document.getElementById('fLegStuIssueDate').value   = fullData.legstu_issueDate       || '';
 
       if (fullData.photo) {
         photoBase64 = fullData.photo;
@@ -690,6 +769,10 @@
      'fPjIssueDate','fPjExpiryDate','fPjIssuingAuthority','fPjRestrictions'
     ].forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
     const natEl = document.getElementById('fNationality'); if(natEl) natEl.value = 'POLSKIE';
+    ['fSchoolName','fSchoolAddress','fSchoolPhone','fSchoolDirector',
+     'fLegSzkCardNumber','fLegSzkIssueDate','fLegSzkExpiryDate',
+     'fUczelnia','fAlbumNumber','fLegStuIssueDate'
+    ].forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
     document.getElementById('photoPreview').style.display = 'none';
     document.getElementById('photoText').textContent = '📷 Kliknij lub przeciągnij zdjęcie';
     document.getElementById('fPhoto').value = '';
