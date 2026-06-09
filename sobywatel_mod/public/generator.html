@@ -4,14 +4,13 @@
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <script src="js/theme-init.js"></script>
-  <title>Moje karty</title>
+  <title>Generator stron</title>
   <style>
-    :root{color-scheme:light;--bg:linear-gradient(135deg,#eef2ff,#f8fafc 60%,#e2e8f0);--card:#fff;--text:#0f172a;--muted:#475569;--border:#cbd5e1;--primary:#4338ca;--primary-soft:rgba(67,56,202,.12);--danger:#ef4444;--danger-soft:rgba(239,68,68,.1);--success:#22c55e;--success-soft:rgba(34,197,94,.1);--shadow:0 8px 32px rgba(15,23,42,.1);--input-bg:#f8fafc}
-    :root[data-theme="dark"]{color-scheme:dark;--bg:linear-gradient(135deg,#0b1220,#111827 60%,#0f172a);--card:#0f172a;--text:#e2e8f0;--muted:#94a3b8;--border:#1e293b;--primary:#60a5fa;--primary-soft:rgba(96,165,250,.12);--danger:#f87171;--danger-soft:rgba(248,113,113,.1);--success:#4ade80;--success-soft:rgba(74,222,128,.1);--shadow:0 8px 32px rgba(0,0,0,.4);--input-bg:#0f172a}
+    :root{color-scheme:light;--bg:linear-gradient(135deg,#eef2ff,#f8fafc 60%,#e2e8f0);--card:#fff;--text:#0f172a;--muted:#475569;--border:#cbd5e1;--primary:#4338ca;--primary-soft:rgba(67,56,202,.12);--danger:#ef4444;--danger-soft:rgba(239,68,68,.1);--success:#22c55e;--success-soft:rgba(34,197,94,.1);--shadow:0 8px 32px rgba(15,23,42,.1)}
+    :root[data-theme="dark"]{color-scheme:dark;--bg:linear-gradient(135deg,#0b1220,#111827 60%,#0f172a);--card:#0f172a;--text:#e2e8f0;--muted:#94a3b8;--border:#1e293b;--primary:#60a5fa;--primary-soft:rgba(96,165,250,.12);--danger:#f87171;--danger-soft:rgba(248,113,113,.1);--success:#4ade80;--success-soft:rgba(74,222,128,.1);--shadow:0 8px 32px rgba(0,0,0,.4)}
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
     body{min-height:100vh;background:var(--bg);font-family:"Roboto","Segoe UI",Arial,sans-serif;color:var(--text);padding-bottom:40px}
 
-    /* Topbar */
     .topbar{background:var(--card);border-bottom:1px solid var(--border);padding:14px 20px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:100;box-shadow:var(--shadow)}
     .topbar-title{font-size:17px;font-weight:700;flex:1}
     .topbar-user{font-size:13px;color:var(--muted)}
@@ -19,87 +18,51 @@
     .btn-logout:hover{border-color:var(--danger);color:var(--danger)}
     .theme-toggle{width:36px;height:36px;border-radius:50%;border:1px solid var(--border);background:var(--card);color:var(--text);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
 
-    /* Container */
     .container{max-width:640px;margin:0 auto;padding:24px 16px}
-
-    /* Section headers */
     .section-title{font-size:14px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;margin-top:28px}
     .section-title:first-child{margin-top:0}
 
-    /* Card list */
+    .info-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:18px;margin-bottom:16px;box-shadow:var(--shadow);font-size:14px;line-height:1.55;color:var(--muted)}
+    .info-card strong{color:var(--text)}
+
     .card-item{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:10px;display:flex;align-items:center;gap:14px;box-shadow:var(--shadow)}
     .card-avatar{width:44px;height:44px;border-radius:50%;background:var(--primary-soft);color:var(--primary);font-weight:700;font-size:16px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
     .card-info{flex:1;min-width:0}
     .card-name{font-weight:600;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    .card-meta{font-size:12px;color:var(--muted);margin-top:2px}
+    .card-meta{font-size:12px;color:var(--muted);margin-top:2px;word-break:break-all}
     .card-actions{display:flex;gap:6px;flex-shrink:0}
     .btn-icon{width:34px;height:34px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:center;transition:all .2s}
     .btn-icon:hover{border-color:var(--primary);color:var(--primary)}
     .btn-icon.del:hover{border-color:var(--danger);color:var(--danger)}
     .empty-state{text-align:center;padding:32px 16px;color:var(--muted);font-size:14px}
 
-    /* Limit bar */
     .limit-info{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px 16px;margin-bottom:16px;font-size:13px;color:var(--muted);display:flex;align-items:center;gap:8px}
     .limit-info.warn{border-color:var(--danger);color:var(--danger);background:var(--danger-soft)}
 
-    /* Form card */
-    .form-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:22px;box-shadow:var(--shadow)}
-    .form-title{font-size:16px;font-weight:700;margin-bottom:20px}
-    label{font-size:13px;font-weight:600;display:block;margin-bottom:5px;color:var(--muted)}
-    input[type=text],input[type=date],select{width:100%;padding:10px 13px;font-size:15px;border-radius:10px;border:1px solid var(--border);outline:none;background:var(--input-bg);color:var(--text);transition:border .2s,box-shadow .2s;margin-bottom:14px}
-    input:focus,select:focus{border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-soft)}
-    .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-    .row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
-    .field{margin-bottom:14px}
-    .field input,.field select{margin-bottom:0}
-
-    /* Date selects */
-    .date-row{display:grid;grid-template-columns:2fr 2fr 3fr;gap:8px;margin-bottom:14px}
-    .date-row select{margin-bottom:0}
-
-    /* Photo upload */
-    .photo-area{border:2px dashed var(--border);border-radius:12px;padding:20px;text-align:center;cursor:pointer;transition:border-color .2s;margin-bottom:14px;position:relative}
-    .photo-area:hover,.photo-area.dragover{border-color:var(--primary)}
-    .photo-area input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
-    .photo-preview{width:80px;height:80px;border-radius:50%;object-fit:cover;margin:0 auto 8px;display:block}
-    .photo-text{font-size:13px;color:var(--muted)}
-
-    /* Buttons */
-    .btn{padding:11px 20px;font-size:15px;font-weight:700;border-radius:999px;border:none;cursor:pointer;transition:opacity .2s,transform .15s}
+    .create-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:22px;box-shadow:var(--shadow);text-align:center}
+    .create-card p{font-size:14px;color:var(--muted);line-height:1.5;margin-bottom:18px}
+    .btn{padding:12px 24px;font-size:15px;font-weight:700;border-radius:999px;border:none;cursor:pointer;transition:opacity .2s,transform .15s}
     .btn:hover{opacity:.9;transform:translateY(-1px)}
     .btn:disabled{opacity:.45;cursor:default;transform:none}
     .btn-primary{background:var(--primary);color:#fff;width:100%}
-    .btn-ghost{background:transparent;border:1px solid var(--border);color:var(--text)}
 
-    /* Link result */
-    .link-result{background:var(--success-soft);border:1px solid var(--success);border-radius:12px;padding:16px;margin-top:16px}
+    .link-result{background:var(--success-soft);border:1px solid var(--success);border-radius:12px;padding:16px;margin-top:16px;text-align:left}
     .link-result p{font-size:13px;color:var(--muted);margin-bottom:8px}
     .link-box{display:flex;gap:8px;align-items:center}
-    .link-box input{flex:1;font-size:13px;padding:8px 12px;border-radius:8px;border:1px solid var(--border);background:var(--input-bg);color:var(--text);margin-bottom:0}
+    .link-box input{flex:1;font-size:12px;padding:8px 12px;border-radius:8px;border:1px solid var(--border);background:var(--card);color:var(--text)}
     .btn-copy{padding:8px 14px;font-size:13px;font-weight:600;border-radius:8px;border:none;background:var(--primary);color:#fff;cursor:pointer;white-space:nowrap}
 
-    /* Msg */
     .msg{margin-top:10px;font-size:13px;padding:10px 14px;border-radius:8px}
     .msg.err{background:var(--danger-soft);color:var(--danger)}
     .msg.ok{background:var(--success-soft);color:var(--success)}
-
-    /* Loading */
     .spinner{display:inline-block;width:18px;height:18px;border-radius:50%;border:2px solid var(--border);border-top-color:var(--primary);animation:spin .7s linear infinite;vertical-align:middle;margin-right:6px}
     @keyframes spin{to{transform:rotate(360deg)}}
-
-    .btn-gen{padding:8px 14px;font-size:13px;font-weight:600;border-radius:8px;border:1px solid var(--border);background:var(--primary-soft);color:var(--primary);cursor:pointer;white-space:nowrap;transition:all .2s}
-    .btn-gen:hover{background:var(--primary);color:#fff}
-    @media(max-width:480px){
-      .row2{grid-template-columns:1fr}
-      .card-actions{gap:4px}
-      .btn-icon{width:30px;height:30px;font-size:13px}
-    }
   </style>
 </head>
 <body>
 
 <div class="topbar">
-  <span class="topbar-title">🪪 sObywatel</span>
+  <span class="topbar-title">🪪 Generator stron</span>
   <span class="topbar-user" id="topbarUser"></span>
   <button class="theme-toggle" id="themeToggle">☀️</button>
   <button class="btn-logout" onclick="doLogout()">Wyloguj</button>
@@ -107,269 +70,22 @@
 
 <div class="container">
 
-  <!-- Lista kart -->
-  <div class="section-title">Twoje karty</div>
+  <div class="info-card">
+    Tutaj tworzysz <strong>puste strony</strong> i kopiujesz link do aplikacji.
+    Użytkownik otwiera link, a dane i zdjęcie wpisuje w czacie komendą <strong>/kreator</strong>.
+  </div>
+
+  <div class="section-title">Twoje strony</div>
   <div id="limitInfo"></div>
   <div id="cardsList"><div class="empty-state"><span class="spinner"></span> Ładowanie...</div></div>
 
-  <!-- Formularz nowej / edytowanej karty -->
-  <div class="section-title" id="formTitle">Nowa karta</div>
-  <div class="form-card" id="formCard">
-    <input type="hidden" id="editId"/>
-    <div class="row2">
-      <div class="field">
-        <label>Imię</label>
-        <input type="text" id="fFirstName" placeholder="Jan" maxlength="50"/>
-      </div>
-      <div class="field">
-        <label>Nazwisko</label>
-        <input type="text" id="fLastName" placeholder="Kowalski" maxlength="50"/>
-      </div>
-    </div>
-    <div class="field">
-      <label>PESEL</label>
-      <div style="display:flex;gap:8px;align-items:center;margin-bottom:14px">
-        <input type="text" id="fPesel" placeholder="00000000000" maxlength="11" inputmode="numeric" style="margin-bottom:0;flex:1"/>
-        <button type="button" class="btn-gen" onclick="genPesel()">⚡ Generuj</button>
-      </div>
-    </div>
-    <div class="field">
-      <label>Data urodzenia</label>
-      <div class="date-row">
-        <select id="fBirthDay">
-          <option value="">Dzień</option>
-          <script>for(let i=1;i<=31;i++)document.write(`<option value="${String(i).padStart(2,'0')}">${String(i).padStart(2,'0')}</option>`)</script>
-        </select>
-        <select id="fBirthMonth">
-          <option value="">Miesiąc</option>
-          <option value="01">Styczeń</option><option value="02">Luty</option>
-          <option value="03">Marzec</option><option value="04">Kwiecień</option>
-          <option value="05">Maj</option><option value="06">Czerwiec</option>
-          <option value="07">Lipiec</option><option value="08">Sierpień</option>
-          <option value="09">Wrzesień</option><option value="10">Październik</option>
-          <option value="11">Listopad</option><option value="12">Grudzień</option>
-        </select>
-        <select id="fBirthYear">
-          <option value="">Rok</option>
-          <script>for(let y=new Date().getFullYear();y>=1900;y--)document.write(`<option value="${y}">${y}</option>`)</script>
-        </select>
-      </div>
-    </div>
-    <div class="field">
-      <label>Płeć</label>
-      <select id="fGender" style="margin-bottom:0">
-        <option value="">Wybierz</option>
-        <option value="M">Mężczyzna</option>
-        <option value="K">Kobieta</option>
-      </select>
-    </div>
-    <!-- Dane dodatkowe -->
-    <div class="section-header" style="font-size:13px;font-weight:700;color:var(--muted);margin:18px 0 10px;border-top:1px solid var(--border);padding-top:14px;">👤 Dane dodatkowe</div>
-    <div class="row2">
-      <div class="field">
-        <label>Imię ojca</label>
-        <input type="text" id="fFatherName" placeholder="Jan" maxlength="50"/>
-      </div>
-      <div class="field">
-        <label>Imię matki</label>
-        <input type="text" id="fMotherName" placeholder="Anna" maxlength="50"/>
-      </div>
-    </div>
-    <div class="row2">
-      <div class="field">
-        <label>Nazwisko rodowe ojca</label>
-        <input type="text" id="fFatherSurname" placeholder="Kowalski" maxlength="50"/>
-      </div>
-      <div class="field">
-        <label>Nazwisko rodowe matki</label>
-        <input type="text" id="fMotherSurname" placeholder="Nowak" maxlength="50"/>
-      </div>
-    </div>
-    <div class="row2">
-      <div class="field">
-        <label>Miejsce urodzenia</label>
-        <input type="text" id="fPlaceOfBirth" placeholder="Warszawa" maxlength="100"/>
-      </div>
-      <div class="field">
-        <label>Narodowość</label>
-        <input type="text" id="fNationality" placeholder="POLSKIE" maxlength="50" value="POLSKIE"/>
-      </div>
-    </div>
-
-    <!-- Adres -->
-    <div class="section-header" style="font-size:13px;font-weight:700;color:var(--muted);margin:18px 0 10px;border-top:1px solid var(--border);padding-top:14px;">📍 Adres zameldowania</div>
-    <div class="field">
-      <label>Adres</label>
-      <input type="text" id="fAddress" placeholder="ul. Przykładowa 1/2, Warszawa" maxlength="200"/>
-    </div>
-    <div class="row2">
-      <div class="field">
-        <label>Kod pocztowy</label>
-        <input type="text" id="fPostalCode" placeholder="00-000" maxlength="6"/>
-      </div>
-      <div class="field">
-        <label>Data zameldowania</label>
-        <input type="text" id="fRegistrationDate" placeholder="DD.MM.YYYY" maxlength="10"/>
-      </div>
-    </div>
-
-    <!-- mDowód -->
-    <div class="section-header" style="font-size:13px;font-weight:700;color:var(--muted);margin:18px 0 10px;border-top:1px solid var(--border);padding-top:14px;">📱 mDowód</div>
-    <div class="field">
-      <label>Seria i numer mDowodu</label>
-      <div style="display:flex;gap:8px;align-items:center;margin-bottom:14px">
-        <input type="text" id="fMdIdSeries" placeholder="ABC 123456" maxlength="10" style="margin-bottom:0;flex:1"/>
-        <button type="button" class="btn-gen" onclick="genDocSeries('fMdIdSeries')">⚡ Generuj</button>
-      </div>
-    </div>
-    <div class="row2">
-      <div class="field">
-        <label>Data wydania</label>
-        <input type="text" id="fMdIssueDate" placeholder="DD.MM.YYYY" maxlength="10"/>
-      </div>
-      <div class="field">
-        <label>Data ważności</label>
-        <input type="text" id="fMdExpiryDate" placeholder="DD.MM.YYYY" maxlength="10"/>
-      </div>
-    </div>
-
-    <!-- Dowód fizyczny -->
-    <div class="section-header" style="font-size:13px;font-weight:700;color:var(--muted);margin:18px 0 10px;border-top:1px solid var(--border);padding-top:14px;">🪪 Dowód osobisty</div>
-    <div class="field">
-      <label>Seria i numer dowodu</label>
-      <div style="display:flex;gap:8px;align-items:center;margin-bottom:14px">
-        <input type="text" id="fDoIdSeries" placeholder="ABC 123456" maxlength="10" style="margin-bottom:0;flex:1"/>
-        <button type="button" class="btn-gen" onclick="genDocSeries('fDoIdSeries')">⚡ Generuj</button>
-      </div>
-    </div>
-    <div class="row2">
-      <div class="field">
-        <label>Data wydania</label>
-        <input type="text" id="fDoIssueDate" placeholder="DD.MM.YYYY" maxlength="10"/>
-      </div>
-      <div class="field">
-        <label>Data ważności</label>
-        <input type="text" id="fDoExpiryDate" placeholder="DD.MM.YYYY" maxlength="10"/>
-      </div>
-    </div>
-    <div class="field">
-      <label>Organ wydający</label>
-      <input type="text" id="fDoIssuingAuthority" placeholder="PREZYDENT M.ST. WARSZAWY" maxlength="100"/>
-    </div>
-
-    <!-- Prawo jazdy -->
-    <div class="section-header" style="font-size:13px;font-weight:700;color:var(--muted);margin:18px 0 10px;border-top:1px solid var(--border);padding-top:14px;">🚗 Prawo jazdy</div>
-    <div class="row2">
-      <div class="field">
-        <label>Numer dokumentu PJ</label>
-        <input type="text" id="fPjDocumentNumber" placeholder="np. KOWAL/00000/01/PL" maxlength="30"/>
-      </div>
-      <div class="field">
-        <label>Numer blankietu PJ</label>
-        <input type="text" id="fPjBlanketNumber" placeholder="np. PL0000000" maxlength="20"/>
-      </div>
-    </div>
-    <div class="row2">
-      <div class="field">
-        <label>Kategorie</label>
-        <input type="text" id="fPjCategory" placeholder="np. B" maxlength="50"/>
-      </div>
-      <div class="field">
-        <label>Status blankietu</label>
-        <input type="text" id="fPjBlanketStatus" placeholder="np. AKTYWNY" maxlength="30"/>
-      </div>
-    </div>
-    <div class="row2">
-      <div class="field">
-        <label>Data wydania PJ</label>
-        <input type="text" id="fPjIssueDate" placeholder="DD.MM.YYYY" maxlength="10"/>
-      </div>
-      <div class="field">
-        <label>Data ważności PJ</label>
-        <input type="text" id="fPjExpiryDate" placeholder="DD.MM.YYYY" maxlength="10"/>
-      </div>
-    </div>
-    <div class="row2">
-      <div class="field">
-        <label>Organ wydający PJ</label>
-        <input type="text" id="fPjIssuingAuthority" placeholder="np. PREZYDENT M.ST. WARSZAWY" maxlength="100"/>
-      </div>
-      <div class="field">
-        <label>Ograniczenia</label>
-        <input type="text" id="fPjRestrictions" placeholder="np. Brak" maxlength="100"/>
-      </div>
-    </div>
-
-    <!-- Zdjęcie -->
-    <div class="section-header" style="font-size:13px;font-weight:700;color:var(--muted);margin:18px 0 10px;border-top:1px solid var(--border);padding-top:14px;">📷 Zdjęcie profilowe</div>
-    <div class="field">
-      <label>Zdjęcie</label>
-      <div class="photo-area" id="photoArea">
-        <input type="file" id="fPhoto" accept="image/*" onchange="handlePhoto(this)"/>
-        <img id="photoPreview" class="photo-preview" src="" alt="" style="display:none"/>
-        <div class="photo-text" id="photoText">📷 Kliknij lub przeciągnij zdjęcie</div>
-      </div>
-    </div>
-
-    <!-- Legitymacja szkolna -->
-    <div class="section-header" style="font-size:13px;font-weight:700;color:var(--muted);margin:18px 0 10px;border-top:1px solid var(--border);padding-top:14px;">🏫 Legitymacja szkolna</div>
-    <div class="field">
-      <label>Nazwa szkoły</label>
-      <input type="text" id="fSchoolName" placeholder="Szkoła Podstawowa nr 1 w Warszawie" maxlength="100"/>
-    </div>
-    <div class="field">
-      <label>Adres szkoły</label>
-      <input type="text" id="fSchoolAddress" placeholder="ul. Szkolna 1, 00-000 Warszawa" maxlength="150"/>
-    </div>
-    <div class="row2">
-      <div class="field">
-        <label>Telefon szkoły</label>
-        <input type="text" id="fSchoolPhone" placeholder="+48 22 000 00 00" maxlength="30"/>
-      </div>
-      <div class="field">
-        <label>Dyrektor szkoły</label>
-        <input type="text" id="fSchoolDirector" placeholder="Jan Kowalski" maxlength="80"/>
-      </div>
-    </div>
-    <div class="row2">
-      <div class="field">
-        <label>Numer legitymacji szkolnej</label>
-        <input type="text" id="fLegSzkCardNumber" placeholder="np. 12345" maxlength="20"/>
-      </div>
-      <div class="field">
-        <label>Data wydania leg. szk.</label>
-        <input type="text" id="fLegSzkIssueDate" placeholder="DD.MM.YYYY" maxlength="10"/>
-      </div>
-    </div>
-    <div class="field">
-      <label>Data ważności leg. szk.</label>
-      <input type="text" id="fLegSzkExpiryDate" placeholder="DD.MM.YYYY" maxlength="10"/>
-    </div>
-
-    <!-- Legitymacja studencka -->
-    <div class="section-header" style="font-size:13px;font-weight:700;color:var(--muted);margin:18px 0 10px;border-top:1px solid var(--border);padding-top:14px;">🎓 Legitymacja studencka</div>
-    <div class="field">
-      <label>Nazwa uczelni</label>
-      <input type="text" id="fUczelnia" placeholder="Uniwersytet Warszawski" maxlength="100"/>
-    </div>
-    <div class="row2">
-      <div class="field">
-        <label>Numer albumu</label>
-        <input type="text" id="fAlbumNumber" placeholder="np. 123456" maxlength="20"/>
-      </div>
-      <div class="field">
-        <label>Data wydania leg. std.</label>
-        <input type="text" id="fLegStuIssueDate" placeholder="DD.MM.YYYY" maxlength="10"/>
-      </div>
-    </div>
-
+  <div class="section-title">Nowa strona</div>
+  <div class="create-card">
+    <p>Utwórz pustą stronę i wyślij link użytkownikowi. Dane uzupełni w aplikacji przez <code>/kreator</code>.</p>
+    <button class="btn btn-primary" id="createBtn" onclick="createPage()">➕ Utwórz nową stronę</button>
     <div id="formMsg"></div>
-    <button class="btn btn-primary" id="submitBtn" onclick="submitCard()">Zatwierdź</button>
-    <div id="cancelEditWrap" style="display:none;margin-top:10px">
-      <button class="btn btn-ghost" style="width:100%" onclick="cancelEdit()">Anuluj edycję</button>
-    </div>
     <div id="linkResult" style="display:none" class="link-result">
-      <p>✅ Karta utworzona! Skopiuj link poniżej i wyślij użytkownikowi:</p>
+      <p>✅ Strona utworzona! Skopiuj link i wyślij użytkownikowi:</p>
       <div class="link-box">
         <input type="text" id="linkInput" readonly/>
         <button class="btn-copy" onclick="copyLink()">📋 Kopiuj</button>
@@ -381,8 +97,8 @@
 
 <script>
   const SESSION_KEY = 'session';
+  const session = localStorage.getItem(SESSION_KEY);
 
-  // ─── Theme ──────────────────────────────────────────────────────────────────
   const tt = document.getElementById('themeToggle');
   function getTheme(){ return document.documentElement.getAttribute('data-theme')==='dark'?'dark':'light' }
   function updateTT(){ tt.textContent = getTheme()==='dark'?'🌙':'☀️' }
@@ -394,8 +110,6 @@
   });
   updateTT();
 
-  // ─── Auth guard ─────────────────────────────────────────────────────────────
-  const session = localStorage.getItem(SESSION_KEY);
   if (!session) {
     window.location.replace('/zaloguj.html');
   } else {
@@ -410,11 +124,9 @@
     }).catch(()=>{ window.location.replace('/zaloguj.html') });
   }
 
-  // ─── State ──────────────────────────────────────────────────────────────────
   let userInfo = {};
   let cards = [];
 
-  // ─── Init ───────────────────────────────────────────────────────────────────
   async function init() {
     try {
       const [meRes, cardsRes] = await Promise.all([
@@ -427,314 +139,119 @@
 
       document.getElementById('topbarUser').textContent = userInfo.username || '';
       renderCards();
-      updateFormVisibility();
+      updateCreateButton();
     } catch(e) {
       document.getElementById('cardsList').innerHTML = '<div class="empty-state" style="color:var(--danger)">Błąd ładowania danych.</div>';
     }
+  }
+
+  function parseJsonField(val) {
+    if (!val) return '';
+    try { return JSON.parse(val); } catch(_) { return String(val).replace(/^"|"$/g, ''); }
   }
 
   function renderCards() {
     const el = document.getElementById('cardsList');
     const limitEl = document.getElementById('limitInfo');
 
-    // Limit info
     if (userInfo.cardLimit !== null && userInfo.cardLimit !== undefined) {
       const remaining = userInfo.cardLimit - cards.length;
       const warn = remaining <= 0;
       limitEl.innerHTML = `<div class="limit-info ${warn?'warn':''}">
-        ${warn ? '🚫' : 'ℹ️'} Karty: <strong>${cards.length}/${userInfo.cardLimit}</strong>${warn?' — osiągnięto limit':''}
+        ${warn ? '🚫' : 'ℹ️'} Strony: <strong>${cards.length}/${userInfo.cardLimit}</strong>${warn?' — osiągnięto limit':''}
       </div>`;
     } else {
       limitEl.innerHTML = '';
     }
 
     if (!cards.length) {
-      el.innerHTML = '<div class="empty-state">Nie masz jeszcze żadnych kart.<br>Utwórz pierwszą poniżej.</div>';
+      el.innerHTML = '<div class="empty-state">Nie masz jeszcze żadnych stron.<br>Utwórz pierwszą poniżej.</div>';
       return;
     }
 
     el.innerHTML = cards.map(c => {
-      const firstName = c.first_name ? JSON.parse(c.first_name) : '?';
-      const lastName = c.last_name ? JSON.parse(c.last_name) : '?';
-      const initials = (firstName[0]||'') + (lastName[0]||'');
-      const bd = c.birth_day && c.birth_month && c.birth_year
-        ? `${JSON.parse(c.birth_day)}.${JSON.parse(c.birth_month)}.${JSON.parse(c.birth_year)}`
-        : '';
+      const firstName = parseJsonField(c.first_name);
+      const lastName = parseJsonField(c.last_name);
+      const hasData = firstName || lastName;
+      const label = hasData ? `${esc(firstName)} ${esc(lastName)}`.trim() : 'Pusta strona';
+      const initials = hasData
+        ? ((firstName[0]||'') + (lastName[0]||'')).toUpperCase()
+        : '⬚';
+      const created = c.created_at ? new Date(c.created_at).toLocaleDateString('pl-PL') : '';
 
-      const editBtn = userInfo.canEdit !== false
-        ? `<button class="btn-icon" onclick="editCard(${c.id})" title="Edytuj">✏️</button>` : '';
       const delBtn = userInfo.canDelete !== false
         ? `<button class="btn-icon del" onclick="deleteCard(${c.id})" title="Usuń">🗑️</button>` : '';
 
       return `<div class="card-item">
-        <div class="card-avatar">${initials.toUpperCase()}</div>
+        <div class="card-avatar">${initials}</div>
         <div class="card-info">
-          <div class="card-name">${esc(firstName)} ${esc(lastName)}</div>
-          <div class="card-meta">${bd ? 'ur. '+bd : ''}</div>
+          <div class="card-name">${label}</div>
+          <div class="card-meta">${created ? 'Utworzono: '+created : ''}</div>
         </div>
         <div class="card-actions">
           <button class="btn-icon" onclick="copyCardLink('${c.card_token}')" title="Kopiuj link">📋</button>
-          ${editBtn}
           ${delBtn}
         </div>
       </div>`;
     }).join('');
   }
 
-  function updateFormVisibility() {
-    const formCard = document.getElementById('formCard');
+  function updateCreateButton() {
+    const btn = document.getElementById('createBtn');
     const atLimit = userInfo.cardLimit !== null && userInfo.cardLimit !== undefined && cards.length >= userInfo.cardLimit;
     const canCreate = userInfo.canCreate !== false;
     if (atLimit || !canCreate) {
-      document.getElementById('submitBtn').disabled = true;
-      document.getElementById('submitBtn').textContent = atLimit ? 'Osiągnięto limit kart' : 'Brak uprawnień do tworzenia';
+      btn.disabled = true;
+      btn.textContent = atLimit ? 'Osiągnięto limit stron' : 'Brak uprawnień do tworzenia';
     } else {
-      document.getElementById('submitBtn').disabled = false;
-      document.getElementById('submitBtn').textContent = 'Zatwierdź';
+      btn.disabled = false;
+      btn.textContent = '➕ Utwórz nową stronę';
     }
   }
 
-  // ─── Photo ──────────────────────────────────────────────────────────────────
-  let photoBase64 = null;
-
-  function handlePhoto(input) {
-    const file = input.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = function(e) {
-      // Kompresuj zdjęcie
-      const img = new Image();
-      img.onload = function() {
-        const canvas = document.createElement('canvas');
-        const MAX = 800;
-        let w = img.width, h = img.height;
-        if (w > h) { if(w>MAX){h=h*MAX/w;w=MAX} } else { if(h>MAX){w=w*MAX/h;h=MAX} }
-        canvas.width = w; canvas.height = h;
-        const ctx = canvas.getContext('2d', { alpha: false });
-        ctx.fillStyle = '#ffffff';
-        ctx.fillRect(0, 0, w, h);
-        ctx.drawImage(img, 0, 0, w, h);
-        photoBase64 = canvas.toDataURL('image/jpeg', 0.92);
-        document.getElementById('photoPreview').src = photoBase64;
-        document.getElementById('photoPreview').style.display = 'block';
-        document.getElementById('photoText').textContent = '✅ Zdjęcie dodane';
-      };
-      img.src = e.target.result;
-    };
-    reader.readAsDataURL(file);
-  }
-
-  // ─── Submit ─────────────────────────────────────────────────────────────────
-  async function submitCard() {
-    const editId = document.getElementById('editId').value;
-    const firstName = document.getElementById('fFirstName').value.trim();
-    const lastName  = document.getElementById('fLastName').value.trim();
-    const pesel     = document.getElementById('fPesel').value.trim();
-    const birthDay  = document.getElementById('fBirthDay').value;
-    const birthMonth= document.getElementById('fBirthMonth').value;
-    const birthYear = document.getElementById('fBirthYear').value;
-    const gender    = document.getElementById('fGender').value;
-
-    if (!firstName || !lastName || !pesel || !birthDay || !birthMonth || !birthYear || !gender) {
-      showMsg('Wypełnij wszystkie pola.', 'err'); return;
-    }
-    if (!/^\d{11}$/.test(pesel)) {
-      showMsg('PESEL musi mieć dokładnie 11 cyfr.', 'err'); return;
-    }
-
-    const nationality = document.getElementById('fNationality').value.trim() || 'POLSKIE';
-    const fathername = document.getElementById('fFatherName').value.trim();
-    const mothername = document.getElementById('fMotherName').value.trim();
-    const fatherSurname = document.getElementById('fFatherSurname').value.trim();
-    const motherSurname = document.getElementById('fMotherSurname').value.trim();
-    const placeOfBirth = document.getElementById('fPlaceOfBirth').value.trim();
-    const address = document.getElementById('fAddress').value.trim();
-    const postalcode = document.getElementById('fPostalCode').value.trim();
-    const registrationDate = document.getElementById('fRegistrationDate').value.trim();
-    const md_idSeries = document.getElementById('fMdIdSeries').value.trim();
-    const md_issueDate = document.getElementById('fMdIssueDate').value.trim();
-    const md_expiryDate = document.getElementById('fMdExpiryDate').value.trim();
-    const do_idSeries = document.getElementById('fDoIdSeries').value.trim();
-    const do_issueDate = document.getElementById('fDoIssueDate').value.trim();
-    const do_expiryDate = document.getElementById('fDoExpiryDate').value.trim();
-    const do_issuingAuthority = document.getElementById('fDoIssuingAuthority').value.trim();
-    const pj_documentNumber = document.getElementById('fPjDocumentNumber').value.trim();
-    const pj_blanketNumber = document.getElementById('fPjBlanketNumber').value.trim();
-    const pj_category = document.getElementById('fPjCategory').value.trim();
-    const pj_blanketStatus = document.getElementById('fPjBlanketStatus').value.trim();
-    const pj_issueDate = document.getElementById('fPjIssueDate').value.trim();
-    const pj_expiryDate = document.getElementById('fPjExpiryDate').value.trim();
-    const pj_issuingAuthority = document.getElementById('fPjIssuingAuthority').value.trim();
-    const pj_restrictions = document.getElementById('fPjRestrictions').value.trim();
-
-    const data = { firstName, lastName, pesel, birthDay, birthMonth, birthYear, gender,
-      nationality, fathername, mothername, fatherSurname, motherSurname, placeOfBirth,
-      address, postalcode, registrationDate,
-      md_idSeries, md_issueDate, md_expiryDate,
-      do_idSeries, do_issueDate, do_expiryDate, do_issuingAuthority,
-      pj_documentNumber, pj_blanketNumber, pj_category, pj_blanketStatus,
-      pj_issueDate, pj_expiryDate, pj_issuingAuthority, pj_restrictions
-    };
-
-    // Legitymacja szkolna
-    const legszk_schoolName    = document.getElementById('fSchoolName')?.value.trim() || '';
-    const legszk_schoolAddress = document.getElementById('fSchoolAddress')?.value.trim() || '';
-    const legszk_schoolPhone   = document.getElementById('fSchoolPhone')?.value.trim() || '';
-    const legszk_schoolDirector= document.getElementById('fSchoolDirector')?.value.trim() || '';
-    const legszk_cardNumber    = document.getElementById('fLegSzkCardNumber')?.value.trim() || '';
-    const legszk_issueDate     = document.getElementById('fLegSzkIssueDate')?.value.trim() || '';
-    const legszk_expiryDate    = document.getElementById('fLegSzkExpiryDate')?.value.trim() || '';
-    if (legszk_schoolName) Object.assign(data, { legszk_schoolName, legszk_schoolAddress, legszk_schoolPhone, legszk_schoolDirector, legszk_cardNumber, legszk_issueDate, legszk_expiryDate });
-
-    // Legitymacja studencka
-    const legstu_uczelnia      = document.getElementById('fUczelnia')?.value.trim() || '';
-    const legstu_albumNumber   = document.getElementById('fAlbumNumber')?.value.trim() || '';
-    const legstu_issueDate     = document.getElementById('fLegStuIssueDate')?.value.trim() || '';
-    if (legstu_uczelnia) Object.assign(data, { legstu_uczelnia, legstu_albumNumber, legstu_issueDate });
-    if (photoBase64) data.photo = photoBase64;
-
-    const btn = document.getElementById('submitBtn');
+  async function createPage() {
+    const btn = document.getElementById('createBtn');
     btn.disabled = true;
-    btn.innerHTML = '<span class="spinner"></span> Zapisuję...';
+    btn.innerHTML = '<span class="spinner"></span> Tworzę...';
+    document.getElementById('linkResult').style.display = 'none';
 
     try {
-      const body = { session, data };
-      if (editId) body.id = parseInt(editId);
       const r = await fetch('/api/submit', {
-        method: 'POST', headers: {'Content-Type':'application/json'},
-        body: JSON.stringify(body)
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ session, data: {} })
       });
       const d = await r.json();
       if (!r.ok || !d.ok) {
-        const msgs = { NO_PERMISSION:'Brak uprawnień.', CARD_LIMIT_REACHED:'Osiągnięto limit kart.', SERVER_ERROR:'Błąd serwera.' };
-        showMsg(msgs[d.error] || 'Błąd.', 'err');
+        const msgs = { NO_PERMISSION:'Brak uprawnień.', CARD_LIMIT_REACHED:'Osiągnięto limit stron.', SERVER_ERROR:'Błąd serwera.' };
+        showMsg(msgs[d.error] || 'Błąd tworzenia strony.', 'err');
         return;
       }
 
-      if (editId) {
-        showMsg('Karta zaktualizowana!', 'ok');
-        cancelEdit();
-      } else {
-        // Pokaż link
-        const origin = window.location.origin;
-        const link = `${origin}/login.html?card_token=${d.card_token}`;
-        document.getElementById('linkInput').value = link;
-        document.getElementById('linkResult').style.display = 'block';
-        resetForm();
-      }
-
-      await init(); // odśwież listę
+      const link = `${window.location.origin}/login.html?card_token=${d.card_token}`;
+      document.getElementById('linkInput').value = link;
+      document.getElementById('linkResult').style.display = 'block';
+      showMsg('Strona utworzona!', 'ok');
+      await init();
     } catch(e) {
       showMsg('Błąd połączenia.', 'err');
     } finally {
-      btn.disabled = false;
-      btn.textContent = 'Zatwierdź';
+      updateCreateButton();
     }
   }
 
-  // ─── Edit ────────────────────────────────────────────────────────────────────
-  async function editCard(id) {
-    // Pobierz pełne dane karty
-    try {
-      const r = await fetch('/api/cards', {
-        method:'POST', headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({ session })
-      });
-      const d = await r.json();
-      const card = (d.cards || []).find(c => c.id === id);
-      // Potrzebujemy pełnych danych — pobierz przez osobny request do /get/card nie zadziała (brak tokenu)
-      // Użyjemy listy i uzupełnimy formularz tym co mamy
-      if (!card) return;
-
-      // Pobierz pełne dane z serwera przez wewnętrzny endpoint
-      const r2 = await fetch('/api/card-full', {
-        method:'POST', headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({ session, id })
-      });
-      let fullData = {};
-      if (r2.ok) fullData = (await r2.json()).data || {};
-
-      document.getElementById('editId').value = id;
-      document.getElementById('fFirstName').value = fullData.firstName || '';
-      document.getElementById('fLastName').value  = fullData.lastName  || '';
-      document.getElementById('fPesel').value     = fullData.pesel     || '';
-      document.getElementById('fBirthDay').value  = fullData.birthDay  || '';
-      document.getElementById('fBirthMonth').value= fullData.birthMonth|| '';
-      document.getElementById('fBirthYear').value = fullData.birthYear || '';
-      document.getElementById('fGender').value    = fullData.gender    || '';
-      document.getElementById('fNationality').value    = fullData.nationality    || 'POLSKIE';
-      document.getElementById('fFatherName').value     = fullData.fathername     || '';
-      document.getElementById('fMotherName').value     = fullData.mothername     || '';
-      document.getElementById('fFatherSurname').value  = fullData.fatherSurname  || '';
-      document.getElementById('fMotherSurname').value  = fullData.motherSurname  || '';
-      document.getElementById('fPlaceOfBirth').value   = fullData.placeOfBirth   || '';
-      document.getElementById('fAddress').value         = fullData.address         || '';
-      document.getElementById('fPostalCode').value      = fullData.postalcode      || '';
-      document.getElementById('fRegistrationDate').value= fullData.registrationDate|| '';
-      document.getElementById('fMdIdSeries').value      = fullData.md_idSeries      || '';
-      document.getElementById('fMdIssueDate').value     = fullData.md_issueDate     || '';
-      document.getElementById('fMdExpiryDate').value    = fullData.md_expiryDate    || '';
-      document.getElementById('fDoIdSeries').value      = fullData.do_idSeries      || '';
-      document.getElementById('fDoIssueDate').value     = fullData.do_issueDate     || '';
-      document.getElementById('fDoExpiryDate').value    = fullData.do_expiryDate    || '';
-      document.getElementById('fDoIssuingAuthority').value = fullData.do_issuingAuthority || '';
-      document.getElementById('fPjDocumentNumber').value = fullData.pj_documentNumber || '';
-      document.getElementById('fPjBlanketNumber').value  = fullData.pj_blanketNumber  || '';
-      document.getElementById('fPjCategory').value       = fullData.pj_category       || '';
-      document.getElementById('fPjBlanketStatus').value  = fullData.pj_blanketStatus  || '';
-      document.getElementById('fPjIssueDate').value      = fullData.pj_issueDate      || '';
-      document.getElementById('fPjExpiryDate').value     = fullData.pj_expiryDate     || '';
-      document.getElementById('fPjIssuingAuthority').value = fullData.pj_issuingAuthority || '';
-      document.getElementById('fPjRestrictions').value   = fullData.pj_restrictions   || '';
-      document.getElementById('fSchoolName').value        = fullData.legszk_schoolName     || '';
-      document.getElementById('fSchoolAddress').value     = fullData.legszk_schoolAddress  || '';
-      document.getElementById('fSchoolPhone').value       = fullData.legszk_schoolPhone    || '';
-      document.getElementById('fSchoolDirector').value    = fullData.legszk_schoolDirector || '';
-      document.getElementById('fLegSzkCardNumber').value  = fullData.legszk_cardNumber     || '';
-      document.getElementById('fLegSzkIssueDate').value   = fullData.legszk_issueDate      || '';
-      document.getElementById('fLegSzkExpiryDate').value  = fullData.legszk_expiryDate     || '';
-      document.getElementById('fUczelnia').value          = fullData.legstu_uczelnia        || '';
-      document.getElementById('fAlbumNumber').value       = fullData.legstu_albumNumber     || '';
-      document.getElementById('fLegStuIssueDate').value   = fullData.legstu_issueDate       || '';
-
-      if (fullData.photo) {
-        photoBase64 = fullData.photo;
-        document.getElementById('photoPreview').src = fullData.photo;
-        document.getElementById('photoPreview').style.display = 'block';
-        document.getElementById('photoText').textContent = '✅ Zdjęcie załadowane';
-      }
-
-      document.getElementById('formTitle').textContent = 'Edytuj kartę';
-      document.getElementById('cancelEditWrap').style.display = 'block';
-      document.getElementById('linkResult').style.display = 'none';
-      document.getElementById('formCard').scrollIntoView({ behavior:'smooth', block:'start' });
-    } catch(e) {
-      alert('Błąd pobierania danych karty.');
-    }
-  }
-
-  function cancelEdit() {
-    resetForm();
-    document.getElementById('editId').value = '';
-    document.getElementById('formTitle').textContent = 'Nowa karta';
-    document.getElementById('cancelEditWrap').style.display = 'none';
-  }
-
-  // ─── Delete ──────────────────────────────────────────────────────────────────
   async function deleteCard(id) {
-    if (!confirm('Na pewno usunąć tę kartę?')) return;
+    if (!confirm('Na pewno usunąć tę stronę?')) return;
     try {
       const r = await fetch('/api/delete-card', {
         method:'POST', headers:{'Content-Type':'application/json'},
         body: JSON.stringify({ session, id })
       });
-      const d = await r.json();
-      if (!r.ok) { alert(d.error || 'Błąd'); return; }
+      if (!r.ok) { const d = await r.json(); alert(d.error || 'Błąd'); return; }
       await init();
     } catch(e) { alert('Błąd połączenia.'); }
   }
 
-  // ─── Copy link ───────────────────────────────────────────────────────────────
   function copyCardLink(token) {
     const link = `${window.location.origin}/login.html?card_token=${token}`;
     navigator.clipboard.writeText(link).then(() => {
@@ -751,36 +268,12 @@
     });
   }
 
-  // ─── Logout ──────────────────────────────────────────────────────────────────
   async function doLogout() {
     try {
       await fetch('/api/logout', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ session }) });
     } catch(_) {}
     localStorage.removeItem(SESSION_KEY);
     window.location.replace('/zaloguj.html');
-  }
-
-  // ─── Helpers ─────────────────────────────────────────────────────────────────
-  function resetForm() {
-    ['fFirstName','fLastName','fPesel'].forEach(id => document.getElementById(id).value = '');
-    ['fBirthDay','fBirthMonth','fBirthYear','fGender'].forEach(id => document.getElementById(id).value = '');
-    ['fFatherName','fMotherName','fFatherSurname','fMotherSurname','fPlaceOfBirth',
-     'fAddress','fPostalCode','fRegistrationDate',
-     'fMdIdSeries','fMdIssueDate','fMdExpiryDate',
-     'fDoIdSeries','fDoIssueDate','fDoExpiryDate','fDoIssuingAuthority',
-     'fPjDocumentNumber','fPjBlanketNumber','fPjCategory','fPjBlanketStatus',
-     'fPjIssueDate','fPjExpiryDate','fPjIssuingAuthority','fPjRestrictions'
-    ].forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
-    const natEl = document.getElementById('fNationality'); if(natEl) natEl.value = 'POLSKIE';
-    ['fSchoolName','fSchoolAddress','fSchoolPhone','fSchoolDirector',
-     'fLegSzkCardNumber','fLegSzkIssueDate','fLegSzkExpiryDate',
-     'fUczelnia','fAlbumNumber','fLegStuIssueDate'
-    ].forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
-    document.getElementById('photoPreview').style.display = 'none';
-    document.getElementById('photoText').textContent = '📷 Kliknij lub przeciągnij zdjęcie';
-    document.getElementById('fPhoto').value = '';
-    photoBase64 = null;
-    document.getElementById('formMsg').innerHTML = '';
   }
 
   function showMsg(txt, type) {
@@ -799,75 +292,6 @@
 
   function esc(t) { return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') }
 
-  // ─── Generatory ──────────────────────────────────────────────────────────────
-  function pad2(n){ return n < 10 ? '0'+n : ''+n; }
-
-  function genPesel() {
-    const day = document.getElementById('fBirthDay').value;
-    const month = document.getElementById('fBirthMonth').value;
-    const year = document.getElementById('fBirthYear').value;
-    const gender = document.getElementById('fGender').value;
-    if (!day || !month || !year) { showMsg('Najpierw wybierz datę urodzenia.', 'err'); return; }
-    const yy = parseInt(year) % 100;
-    const mm = parseInt(month) + (parseInt(year) >= 2000 ? 20 : 0);
-    const dd = parseInt(day);
-    // 4 losowe cyfry, cyfra 10 koduje płeć
-    const r1 = Math.floor(Math.random()*10);
-    const r2 = Math.floor(Math.random()*10);
-    const r3 = Math.floor(Math.random()*10);
-    let r4;
-    if (gender === 'M') { do { r4 = Math.floor(Math.random()*10); } while(r4 % 2 === 0); }
-    else { do { r4 = Math.floor(Math.random()*10); } while(r4 % 2 !== 0); }
-    const digits = [
-      Math.floor(yy/10), yy%10,
-      Math.floor(mm/10), mm%10,
-      Math.floor(dd/10), dd%10,
-      r1, r2, r3, r4
-    ];
-    const weights = [1,3,7,9,1,3,7,9,1,3];
-    let sum = 0;
-    for(let i=0;i<10;i++) sum += digits[i]*weights[i];
-    const ctrl = (10 - (sum % 10)) % 10;
-    digits.push(ctrl);
-    document.getElementById('fPesel').value = digits.join('');
-  }
-
-  function genDocSeries(fieldId) {
-    const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-    let s = '';
-    for(let i=0;i<3;i++) s += letters[Math.floor(Math.random()*26)];
-    s += ' ';
-    for(let i=0;i<6;i++) s += Math.floor(Math.random()*10);
-    document.getElementById(fieldId).value = s;
-  }
-
-  function autoDaty() {
-    const day = document.getElementById('fBirthDay').value;
-    const month = document.getElementById('fBirthMonth').value;
-    const year = document.getElementById('fBirthYear').value;
-    if (!day || !month || !year) return;
-    const d = parseInt(day), m = parseInt(month), y = parseInt(year);
-    const issueDate = pad2(d)+'.'+pad2(m)+'.'+(y+18);
-    const expiryDate = pad2(d)+'.'+pad2(m)+'.'+(y+28);
-    ['fMdIssueDate','fDoIssueDate','fRegistrationDate'].forEach(id => {
-      const el = document.getElementById(id); if(el && !el.value) el.value = issueDate;
-    });
-    ['fMdExpiryDate','fDoExpiryDate'].forEach(id => {
-      const el = document.getElementById(id); if(el && !el.value) el.value = expiryDate;
-    });
-    // Pesel autogen jeśli pusty i jest płeć
-    if (!document.getElementById('fPesel').value && document.getElementById('fGender').value) {
-      genPesel();
-    }
-  }
-
-  // Podpięcie eventów autoDaty
-  ['fBirthDay','fBirthMonth','fBirthYear','fGender'].forEach(id => {
-    const el = document.getElementById(id);
-    if(el) el.addEventListener('change', autoDaty);
-  });
-
-  // Start
   if (session) init();
 </script>
 </body>

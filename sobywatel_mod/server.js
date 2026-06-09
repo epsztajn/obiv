@@ -405,6 +405,70 @@ app.get('/images', async (req, res) => {
   }
 });
 
+// ─── Helper: klucz z hasha aktywacji (PWA) ───────────────────────────────────
+async function getKeyFromActivationHash(hash) {
+  if (!hash) return null;
+  const rows = await sql`
+    SELECT * FROM keys
+    WHERE key_hash = ${hash} AND used = TRUE
+    LIMIT 1
+  `;
+  if (!rows.length) return null;
+  const key = rows[0];
+  if (key.blocked) return null;
+  return key;
+}
+
+// POST /api/kreator/save — zapis danych z czatu /kreator (Neon)
+app.post('/api/kreator/save', async (req, res) => {
+  const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'unknown';
+  if (!rateLimit(`kreator:${ip}`, 60 * 1000, 15)) {
+    return res.status(429).json({ error: 'RATE_LIMITED' });
+  }
+
+  const { hash, card_token, data } = req.body;
+  if (!data || typeof data !== 'object') {
+    return res.status(400).json({ error: 'MISSING_FIELDS' });
+  }
+
+  try {
+    // Aktualizacja istniejącej strony — card_token z linku generatora jest sekretem
+    if (card_token) {
+      const existing = await sql`
+        SELECT id, card_token FROM cards WHERE card_token = ${card_token} LIMIT 1
+      `;
+      if (!existing.length) return res.status(404).json({ error: 'CARD_NOT_FOUND' });
+
+      await sql`UPDATE cards SET data = ${data} WHERE id = ${existing[0].id}`;
+      return res.json({ ok: true, card_token: existing[0].card_token });
+    }
+
+    // Nowa karta — wymaga hasha klucza aktywacyjnego użytkownika PWA
+    if (!hash) return res.status(400).json({ error: 'MISSING_TOKEN' });
+
+    const key = await getKeyFromActivationHash(hash);
+    if (!key) return res.status(401).json({ error: 'UNAUTHORIZED' });
+    if (key.can_create === false) return res.status(403).json({ error: 'NO_PERMISSION' });
+
+    if (key.card_limit !== null) {
+      const count = await sql`SELECT COUNT(*) as c FROM cards WHERE key_id = ${key.id}`;
+      if (parseInt(count[0].c) >= key.card_limit) {
+        return res.status(403).json({ error: 'CARD_LIMIT_REACHED' });
+      }
+    }
+
+    const newToken = generateToken();
+    await sql`
+      INSERT INTO cards (card_token, key_id, username, data)
+      VALUES (${newToken}, ${key.id}, ${key.username}, ${data})
+    `;
+    return res.json({ ok: true, card_token: newToken });
+  } catch (e) {
+    console.error('kreator/save error:', e);
+    return res.status(500).json({ error: 'SERVER_ERROR' });
+  }
+});
+
 // GET /api/assistant/commands
 app.get('/api/assistant/commands', async (req, res) => {
   try {

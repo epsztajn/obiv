@@ -27,6 +27,8 @@ function pad2(n) { return n < 10 ? '0' + n : '' + n; }
 
 async function loadCardFromToken(token) {
   try {
+    try { localStorage.setItem('card_token', token); } catch(_) {}
+
     var r = await fetch('/get/card?card_token=' + encodeURIComponent(token));
     if (r.ok) {
       var d = await r.json();
