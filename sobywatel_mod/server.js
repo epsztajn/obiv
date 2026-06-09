@@ -9,7 +9,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 const sql = neon(process.env.DATABASE_URL);
 
-// ─── Rate limiting ────────────────────────────────────────────────────────────
+// ─── Rate limiting ────────────────────────────────────────────────────────
 const rateBuckets = new Map();
 function rateLimit(key, windowMs, max) {
   const now = Date.now();
@@ -21,7 +21,7 @@ function rateLimit(key, windowMs, max) {
   return true;
 }
 
-// ─── Admin auth ───────────────────────────────────────────────────────────────
+// ─── Admin auth ─────────────────────────────────────────────────────────
 function adminAuth(req, res, next) {
   const token = req.headers['x-admin-token'] || req.query.token;
   if (!token || token !== process.env.ADMIN_TOKEN) {
@@ -30,7 +30,7 @@ function adminAuth(req, res, next) {
   next();
 }
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
+// ─── Helpers ──────────────────────────────────────────────────────────
 function sha256(text) {
   return crypto.createHash('sha256').update(text).digest('hex');
 }
@@ -49,7 +49,7 @@ function generateToken() {
   return crypto.randomBytes(32).toString('hex');
 }
 
-// ─── DB init ──────────────────────────────────────────────────────────────────
+// ─── DB init ──────────────────────────────────────────────────────────
 async function initDb() {
   // Tabela kluczy
   await sql`
@@ -118,7 +118,7 @@ async function initDb() {
   if (parseInt(existing[0].c) === 0) {
     await sql`
       INSERT INTO assistant_commands (cmd, label, response) VALUES
-      ('/instrukcja', 'Instrukcja', '<ol><li>Wejdź na stronę i dodaj do ekranu głównego</li><li>Uruchom aplikację z pulpitu</li><li>Wpisz otrzymany klucz — <strong>ZAPISZ GO!</strong></li><li>Ustaw hasło przy pierwszym logowaniu</li></ol>'),
+      ('/instrukcja', 'Instrukcja', '<ol><li>Wejdź na stronę i dodaj do ekranu głównego</li><li>Uruchom aplikację z pulpitu</li><li>Wpisz otrzymany klucz — <strong>ZAPISZ GO!</strong></li></ol>'),
       ('/pomoc', 'Pomoc (ticket)', 'Aby uzyskać pomoc, skontaktuj się z administratorem na Discordzie.'),
       ('/aktualizacja', 'Aktualizacja aplikacji', 'Aby zaktualizować aplikację, usuń ją z ekranu głównego i dodaj ponownie.')
       ON CONFLICT DO NOTHING
@@ -143,9 +143,9 @@ async function getKeyFromSession(session) {
   return key;
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════════════════
 // PUBLIC API
-// ═══════════════════════════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════════════════
 
 // POST /api/activate/check
 app.post('/api/activate/check', async (req, res) => {
@@ -489,6 +489,27 @@ app.post('/api/kreator/save', async (req, res) => {
   }
 });
 
+// POST /api/kreator/load — ładowanie karty do edycji
+app.post('/api/kreator/load', async (req, res) => {
+  const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'unknown';
+  if (!rateLimit(`kreator_load:${ip}`, 60 * 1000, 20)) {
+    return res.status(429).json({ error: 'RATE_LIMITED' });
+  }
+
+  const { card_token } = req.body;
+  if (!card_token) return res.status(400).json({ error: 'MISSING_TOKEN' });
+
+  try {
+    const rows = await sql`SELECT data FROM cards WHERE card_token = ${card_token} LIMIT 1`;
+    if (!rows.length) return res.status(404).json({ error: 'CARD_NOT_FOUND' });
+    
+    return res.json({ ok: true, data: rows[0].data });
+  } catch (e) {
+    console.error('kreator/load error:', e);
+    return res.status(500).json({ error: 'SERVER_ERROR' });
+  }
+});
+
 // GET /api/assistant/commands
 app.get('/api/assistant/commands', async (req, res) => {
   try {
@@ -499,9 +520,9 @@ app.get('/api/assistant/commands', async (req, res) => {
   }
 });
 
-// ═══════════════════════════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════════════════
 // ADMIN API
-// ═══════════════════════════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════════════════
 
 app.post('/api/admin/login', async (req, res) => {
   const { password } = req.body;
@@ -664,7 +685,7 @@ app.delete('/api/admin/commands/:id', adminAuth, async (req, res) => {
   res.json({ ok: true });
 });
 
-// ─── Catch-all ────────────────────────────────────────────────────────────────
+// ─── Catch-all ─────────────────────────────────────────────────────────
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
