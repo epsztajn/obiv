@@ -87,6 +87,8 @@
     .spinner{display:inline-block;width:18px;height:18px;border-radius:50%;border:2px solid var(--border);border-top-color:var(--primary);animation:spin .7s linear infinite;vertical-align:middle;margin-right:6px}
     @keyframes spin{to{transform:rotate(360deg)}}
 
+    .btn-gen{padding:8px 14px;font-size:13px;font-weight:600;border-radius:8px;border:1px solid var(--border);background:var(--primary-soft);color:var(--primary);cursor:pointer;white-space:nowrap;transition:all .2s}
+    .btn-gen:hover{background:var(--primary);color:#fff}
     @media(max-width:480px){
       .row2{grid-template-columns:1fr}
       .card-actions{gap:4px}
@@ -126,7 +128,10 @@
     </div>
     <div class="field">
       <label>PESEL</label>
-      <input type="text" id="fPesel" placeholder="00000000000" maxlength="11" inputmode="numeric"/>
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:14px">
+        <input type="text" id="fPesel" placeholder="00000000000" maxlength="11" inputmode="numeric" style="margin-bottom:0;flex:1"/>
+        <button type="button" class="btn-gen" onclick="genPesel()">⚡ Generuj</button>
+      </div>
     </div>
     <div class="field">
       <label>Data urodzenia</label>
@@ -158,7 +163,146 @@
         <option value="K">Kobieta</option>
       </select>
     </div>
-    <div class="field" style="margin-top:14px">
+    <!-- Dane dodatkowe -->
+    <div class="section-header" style="font-size:13px;font-weight:700;color:var(--muted);margin:18px 0 10px;border-top:1px solid var(--border);padding-top:14px;">👤 Dane dodatkowe</div>
+    <div class="row2">
+      <div class="field">
+        <label>Imię ojca</label>
+        <input type="text" id="fFatherName" placeholder="Jan" maxlength="50"/>
+      </div>
+      <div class="field">
+        <label>Imię matki</label>
+        <input type="text" id="fMotherName" placeholder="Anna" maxlength="50"/>
+      </div>
+    </div>
+    <div class="row2">
+      <div class="field">
+        <label>Nazwisko rodowe ojca</label>
+        <input type="text" id="fFatherSurname" placeholder="Kowalski" maxlength="50"/>
+      </div>
+      <div class="field">
+        <label>Nazwisko rodowe matki</label>
+        <input type="text" id="fMotherSurname" placeholder="Nowak" maxlength="50"/>
+      </div>
+    </div>
+    <div class="row2">
+      <div class="field">
+        <label>Miejsce urodzenia</label>
+        <input type="text" id="fPlaceOfBirth" placeholder="Warszawa" maxlength="100"/>
+      </div>
+      <div class="field">
+        <label>Narodowość</label>
+        <input type="text" id="fNationality" placeholder="POLSKIE" maxlength="50" value="POLSKIE"/>
+      </div>
+    </div>
+
+    <!-- Adres -->
+    <div class="section-header" style="font-size:13px;font-weight:700;color:var(--muted);margin:18px 0 10px;border-top:1px solid var(--border);padding-top:14px;">📍 Adres zameldowania</div>
+    <div class="field">
+      <label>Adres</label>
+      <input type="text" id="fAddress" placeholder="ul. Przykładowa 1/2, Warszawa" maxlength="200"/>
+    </div>
+    <div class="row2">
+      <div class="field">
+        <label>Kod pocztowy</label>
+        <input type="text" id="fPostalCode" placeholder="00-000" maxlength="6"/>
+      </div>
+      <div class="field">
+        <label>Data zameldowania</label>
+        <input type="text" id="fRegistrationDate" placeholder="DD.MM.YYYY" maxlength="10"/>
+      </div>
+    </div>
+
+    <!-- mDowód -->
+    <div class="section-header" style="font-size:13px;font-weight:700;color:var(--muted);margin:18px 0 10px;border-top:1px solid var(--border);padding-top:14px;">📱 mDowód</div>
+    <div class="field">
+      <label>Seria i numer mDowodu</label>
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:14px">
+        <input type="text" id="fMdIdSeries" placeholder="ABC 123456" maxlength="10" style="margin-bottom:0;flex:1"/>
+        <button type="button" class="btn-gen" onclick="genDocSeries('fMdIdSeries')">⚡ Generuj</button>
+      </div>
+    </div>
+    <div class="row2">
+      <div class="field">
+        <label>Data wydania</label>
+        <input type="text" id="fMdIssueDate" placeholder="DD.MM.YYYY" maxlength="10"/>
+      </div>
+      <div class="field">
+        <label>Data ważności</label>
+        <input type="text" id="fMdExpiryDate" placeholder="DD.MM.YYYY" maxlength="10"/>
+      </div>
+    </div>
+
+    <!-- Dowód fizyczny -->
+    <div class="section-header" style="font-size:13px;font-weight:700;color:var(--muted);margin:18px 0 10px;border-top:1px solid var(--border);padding-top:14px;">🪪 Dowód osobisty</div>
+    <div class="field">
+      <label>Seria i numer dowodu</label>
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:14px">
+        <input type="text" id="fDoIdSeries" placeholder="ABC 123456" maxlength="10" style="margin-bottom:0;flex:1"/>
+        <button type="button" class="btn-gen" onclick="genDocSeries('fDoIdSeries')">⚡ Generuj</button>
+      </div>
+    </div>
+    <div class="row2">
+      <div class="field">
+        <label>Data wydania</label>
+        <input type="text" id="fDoIssueDate" placeholder="DD.MM.YYYY" maxlength="10"/>
+      </div>
+      <div class="field">
+        <label>Data ważności</label>
+        <input type="text" id="fDoExpiryDate" placeholder="DD.MM.YYYY" maxlength="10"/>
+      </div>
+    </div>
+    <div class="field">
+      <label>Organ wydający</label>
+      <input type="text" id="fDoIssuingAuthority" placeholder="PREZYDENT M.ST. WARSZAWY" maxlength="100"/>
+    </div>
+
+    <!-- Prawo jazdy -->
+    <div class="section-header" style="font-size:13px;font-weight:700;color:var(--muted);margin:18px 0 10px;border-top:1px solid var(--border);padding-top:14px;">🚗 Prawo jazdy</div>
+    <div class="row2">
+      <div class="field">
+        <label>Numer dokumentu PJ</label>
+        <input type="text" id="fPjDocumentNumber" placeholder="np. KOWAL/00000/01/PL" maxlength="30"/>
+      </div>
+      <div class="field">
+        <label>Numer blankietu PJ</label>
+        <input type="text" id="fPjBlanketNumber" placeholder="np. PL0000000" maxlength="20"/>
+      </div>
+    </div>
+    <div class="row2">
+      <div class="field">
+        <label>Kategorie</label>
+        <input type="text" id="fPjCategory" placeholder="np. B" maxlength="50"/>
+      </div>
+      <div class="field">
+        <label>Status blankietu</label>
+        <input type="text" id="fPjBlanketStatus" placeholder="np. AKTYWNY" maxlength="30"/>
+      </div>
+    </div>
+    <div class="row2">
+      <div class="field">
+        <label>Data wydania PJ</label>
+        <input type="text" id="fPjIssueDate" placeholder="DD.MM.YYYY" maxlength="10"/>
+      </div>
+      <div class="field">
+        <label>Data ważności PJ</label>
+        <input type="text" id="fPjExpiryDate" placeholder="DD.MM.YYYY" maxlength="10"/>
+      </div>
+    </div>
+    <div class="row2">
+      <div class="field">
+        <label>Organ wydający PJ</label>
+        <input type="text" id="fPjIssuingAuthority" placeholder="np. PREZYDENT M.ST. WARSZAWY" maxlength="100"/>
+      </div>
+      <div class="field">
+        <label>Ograniczenia</label>
+        <input type="text" id="fPjRestrictions" placeholder="np. Brak" maxlength="100"/>
+      </div>
+    </div>
+
+    <!-- Zdjęcie -->
+    <div class="section-header" style="font-size:13px;font-weight:700;color:var(--muted);margin:18px 0 10px;border-top:1px solid var(--border);padding-top:14px;">📷 Zdjęcie profilowe</div>
+    <div class="field">
       <label>Zdjęcie</label>
       <div class="photo-area" id="photoArea">
         <input type="file" id="fPhoto" accept="image/*" onchange="handlePhoto(this)"/>
@@ -342,7 +486,39 @@
       showMsg('PESEL musi mieć dokładnie 11 cyfr.', 'err'); return;
     }
 
-    const data = { firstName, lastName, pesel, birthDay, birthMonth, birthYear, gender };
+    const nationality = document.getElementById('fNationality').value.trim() || 'POLSKIE';
+    const fathername = document.getElementById('fFatherName').value.trim();
+    const mothername = document.getElementById('fMotherName').value.trim();
+    const fatherSurname = document.getElementById('fFatherSurname').value.trim();
+    const motherSurname = document.getElementById('fMotherSurname').value.trim();
+    const placeOfBirth = document.getElementById('fPlaceOfBirth').value.trim();
+    const address = document.getElementById('fAddress').value.trim();
+    const postalcode = document.getElementById('fPostalCode').value.trim();
+    const registrationDate = document.getElementById('fRegistrationDate').value.trim();
+    const md_idSeries = document.getElementById('fMdIdSeries').value.trim();
+    const md_issueDate = document.getElementById('fMdIssueDate').value.trim();
+    const md_expiryDate = document.getElementById('fMdExpiryDate').value.trim();
+    const do_idSeries = document.getElementById('fDoIdSeries').value.trim();
+    const do_issueDate = document.getElementById('fDoIssueDate').value.trim();
+    const do_expiryDate = document.getElementById('fDoExpiryDate').value.trim();
+    const do_issuingAuthority = document.getElementById('fDoIssuingAuthority').value.trim();
+    const pj_documentNumber = document.getElementById('fPjDocumentNumber').value.trim();
+    const pj_blanketNumber = document.getElementById('fPjBlanketNumber').value.trim();
+    const pj_category = document.getElementById('fPjCategory').value.trim();
+    const pj_blanketStatus = document.getElementById('fPjBlanketStatus').value.trim();
+    const pj_issueDate = document.getElementById('fPjIssueDate').value.trim();
+    const pj_expiryDate = document.getElementById('fPjExpiryDate').value.trim();
+    const pj_issuingAuthority = document.getElementById('fPjIssuingAuthority').value.trim();
+    const pj_restrictions = document.getElementById('fPjRestrictions').value.trim();
+
+    const data = { firstName, lastName, pesel, birthDay, birthMonth, birthYear, gender,
+      nationality, fathername, mothername, fatherSurname, motherSurname, placeOfBirth,
+      address, postalcode, registrationDate,
+      md_idSeries, md_issueDate, md_expiryDate,
+      do_idSeries, do_issueDate, do_expiryDate, do_issuingAuthority,
+      pj_documentNumber, pj_blanketNumber, pj_category, pj_blanketStatus,
+      pj_issueDate, pj_expiryDate, pj_issuingAuthority, pj_restrictions
+    };
     if (photoBase64) data.photo = photoBase64;
 
     const btn = document.getElementById('submitBtn');
@@ -414,6 +590,30 @@
       document.getElementById('fBirthMonth').value= fullData.birthMonth|| '';
       document.getElementById('fBirthYear').value = fullData.birthYear || '';
       document.getElementById('fGender').value    = fullData.gender    || '';
+      document.getElementById('fNationality').value    = fullData.nationality    || 'POLSKIE';
+      document.getElementById('fFatherName').value     = fullData.fathername     || '';
+      document.getElementById('fMotherName').value     = fullData.mothername     || '';
+      document.getElementById('fFatherSurname').value  = fullData.fatherSurname  || '';
+      document.getElementById('fMotherSurname').value  = fullData.motherSurname  || '';
+      document.getElementById('fPlaceOfBirth').value   = fullData.placeOfBirth   || '';
+      document.getElementById('fAddress').value         = fullData.address         || '';
+      document.getElementById('fPostalCode').value      = fullData.postalcode      || '';
+      document.getElementById('fRegistrationDate').value= fullData.registrationDate|| '';
+      document.getElementById('fMdIdSeries').value      = fullData.md_idSeries      || '';
+      document.getElementById('fMdIssueDate').value     = fullData.md_issueDate     || '';
+      document.getElementById('fMdExpiryDate').value    = fullData.md_expiryDate    || '';
+      document.getElementById('fDoIdSeries').value      = fullData.do_idSeries      || '';
+      document.getElementById('fDoIssueDate').value     = fullData.do_issueDate     || '';
+      document.getElementById('fDoExpiryDate').value    = fullData.do_expiryDate    || '';
+      document.getElementById('fDoIssuingAuthority').value = fullData.do_issuingAuthority || '';
+      document.getElementById('fPjDocumentNumber').value = fullData.pj_documentNumber || '';
+      document.getElementById('fPjBlanketNumber').value  = fullData.pj_blanketNumber  || '';
+      document.getElementById('fPjCategory').value       = fullData.pj_category       || '';
+      document.getElementById('fPjBlanketStatus').value  = fullData.pj_blanketStatus  || '';
+      document.getElementById('fPjIssueDate').value      = fullData.pj_issueDate      || '';
+      document.getElementById('fPjExpiryDate').value     = fullData.pj_expiryDate     || '';
+      document.getElementById('fPjIssuingAuthority').value = fullData.pj_issuingAuthority || '';
+      document.getElementById('fPjRestrictions').value   = fullData.pj_restrictions   || '';
 
       if (fullData.photo) {
         photoBase64 = fullData.photo;
@@ -482,6 +682,14 @@
   function resetForm() {
     ['fFirstName','fLastName','fPesel'].forEach(id => document.getElementById(id).value = '');
     ['fBirthDay','fBirthMonth','fBirthYear','fGender'].forEach(id => document.getElementById(id).value = '');
+    ['fFatherName','fMotherName','fFatherSurname','fMotherSurname','fPlaceOfBirth',
+     'fAddress','fPostalCode','fRegistrationDate',
+     'fMdIdSeries','fMdIssueDate','fMdExpiryDate',
+     'fDoIdSeries','fDoIssueDate','fDoExpiryDate','fDoIssuingAuthority',
+     'fPjDocumentNumber','fPjBlanketNumber','fPjCategory','fPjBlanketStatus',
+     'fPjIssueDate','fPjExpiryDate','fPjIssuingAuthority','fPjRestrictions'
+    ].forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
+    const natEl = document.getElementById('fNationality'); if(natEl) natEl.value = 'POLSKIE';
     document.getElementById('photoPreview').style.display = 'none';
     document.getElementById('photoText').textContent = '📷 Kliknij lub przeciągnij zdjęcie';
     document.getElementById('fPhoto').value = '';
@@ -504,6 +712,74 @@
   }
 
   function esc(t) { return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') }
+
+  // ─── Generatory ──────────────────────────────────────────────────────────────
+  function pad2(n){ return n < 10 ? '0'+n : ''+n; }
+
+  function genPesel() {
+    const day = document.getElementById('fBirthDay').value;
+    const month = document.getElementById('fBirthMonth').value;
+    const year = document.getElementById('fBirthYear').value;
+    const gender = document.getElementById('fGender').value;
+    if (!day || !month || !year) { showMsg('Najpierw wybierz datę urodzenia.', 'err'); return; }
+    const yy = parseInt(year) % 100;
+    const mm = parseInt(month) + (parseInt(year) >= 2000 ? 20 : 0);
+    const dd = parseInt(day);
+    // 4 losowe cyfry, cyfra 10 koduje płeć
+    const r1 = Math.floor(Math.random()*10);
+    const r2 = Math.floor(Math.random()*10);
+    const r3 = Math.floor(Math.random()*10);
+    let r4;
+    if (gender === 'M') { do { r4 = Math.floor(Math.random()*10); } while(r4 % 2 === 0); }
+    else { do { r4 = Math.floor(Math.random()*10); } while(r4 % 2 !== 0); }
+    const digits = [
+      Math.floor(yy/10), yy%10,
+      Math.floor(mm/10), mm%10,
+      Math.floor(dd/10), dd%10,
+      r1, r2, r3, r4
+    ];
+    const weights = [1,3,7,9,1,3,7,9,1,3];
+    let sum = 0;
+    for(let i=0;i<10;i++) sum += digits[i]*weights[i];
+    const ctrl = (10 - (sum % 10)) % 10;
+    digits.push(ctrl);
+    document.getElementById('fPesel').value = digits.join('');
+  }
+
+  function genDocSeries(fieldId) {
+    const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    let s = '';
+    for(let i=0;i<3;i++) s += letters[Math.floor(Math.random()*26)];
+    s += ' ';
+    for(let i=0;i<6;i++) s += Math.floor(Math.random()*10);
+    document.getElementById(fieldId).value = s;
+  }
+
+  function autoDaty() {
+    const day = document.getElementById('fBirthDay').value;
+    const month = document.getElementById('fBirthMonth').value;
+    const year = document.getElementById('fBirthYear').value;
+    if (!day || !month || !year) return;
+    const d = parseInt(day), m = parseInt(month), y = parseInt(year);
+    const issueDate = pad2(d)+'.'+pad2(m)+'.'+(y+18);
+    const expiryDate = pad2(d)+'.'+pad2(m)+'.'+(y+28);
+    ['fMdIssueDate','fDoIssueDate','fRegistrationDate'].forEach(id => {
+      const el = document.getElementById(id); if(el && !el.value) el.value = issueDate;
+    });
+    ['fMdExpiryDate','fDoExpiryDate'].forEach(id => {
+      const el = document.getElementById(id); if(el && !el.value) el.value = expiryDate;
+    });
+    // Pesel autogen jeśli pusty i jest płeć
+    if (!document.getElementById('fPesel').value && document.getElementById('fGender').value) {
+      genPesel();
+    }
+  }
+
+  // Podpięcie eventów autoDaty
+  ['fBirthDay','fBirthMonth','fBirthYear','fGender'].forEach(id => {
+    const el = document.getElementById(id);
+    if(el) el.addEventListener('change', autoDaty);
+  });
 
   // Start
   if (session) init();

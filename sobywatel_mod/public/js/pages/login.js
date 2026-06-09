@@ -1,4 +1,4 @@
-// login.js - hasło lokalne, po zalogowaniu wchodzi do documents.html
+// login.js
 
 function showCustomModal(message, title, reloadOnClose) {
   var overlay = document.getElementById("customAlertOverlay");
@@ -22,6 +22,141 @@ function redirectToDashboard() {
   try { sessionStorage.setItem("userUnlocked", "1"); } catch(e) {}
   window.location.href = "documents.html";
 }
+
+// Pobierz dane karty z serwera i zapisz do localStorage
+async function loadCardFromToken(token) {
+  try {
+    // Dane osobowe
+    var r = await fetch('/get/card?card_token=' + encodeURIComponent(token));
+    if (r.ok) {
+      var d = await r.json();
+
+      // Mapowanie: klucz w bazie -> klucz w localStorage (dla dowod.js)
+      var map = {
+        firstName:           'name',
+        lastName:            'surname',
+        lastName:            'lastName',
+        pesel:               'pesel',
+        gender:              'gender',
+        nationality:         'nationality',
+        fathername:          'fathername',
+        mothername:          'mothername',
+        fatherSurname:       'fatherSurname',
+        motherSurname:       'motherSurname',
+        placeOfBirth:        'placeOfBirth',
+        address:             'address',
+        postalcode:          'postalcode',
+        registrationDate:    'registrationDate',
+        md_idSeries:         'md_idSeries',
+        md_expiryDate:       'md_expiryDate',
+        md_issueDate:        'md_issueDate',
+        do_idSeries:         'do_idSeries',
+        do_expiryDate:       'do_expiryDate',
+        do_issueDate:        'do_issueDate',
+        do_issuingAuthority: 'do_issuingAuthority',
+      };
+
+      // Zapisz pod głównymi kluczami
+      Object.keys(map).forEach(function(dbKey) {
+        if (d[dbKey] != null && String(d[dbKey]).trim()) {
+          localStorage.setItem(map[dbKey], d[dbKey]);
+        }
+      });
+
+      // Data urodzenia z birthDay/birthMonth/birthYear
+      var bd = d.birthDay, bm = d.birthMonth, by = d.birthYear;
+      if (bd && bm && by) {
+        var pad = function(n){ return n < 10 ? '0'+n : ''+n; };
+        var dateStr = pad(bd) + '.' + pad(bm) + '.' + by;
+        localStorage.setItem('birthDate', dateStr);
+      }
+
+      // Aliasy dla diia.js
+      if (d.firstName) localStorage.setItem('diia_name', d.firstName);
+      if (d.lastName)  localStorage.setItem('diia_surname', d.lastName);
+      if (d.placeOfBirth) localStorage.setItem('diia_placeOfBirth', d.placeOfBirth);
+      if (d.nationality)  localStorage.setItem('diia_nationality', d.nationality);
+      if (d.pesel)        localStorage.setItem('diia_pesel', d.pesel);
+      if (bd && bm && by) {
+        var pad2 = function(n){ return n < 10 ? '0'+n : ''+n; };
+        localStorage.setItem('diia_birthDate', pad2(bd)+'.'+pad2(bm)+'.'+by);
+      }
+
+      // Pola prawojazdy (z prefiksem display-..._prawojazdy)
+      var pjMap = {
+        firstName:                      'display-name_prawojazdy',
+        lastName:                       'display-surname_prawojazdy',
+        pesel:                          'display-pesel_prawojazdy',
+        placeOfBirth:                   'display-birthPlace_prawojazdy',
+        pj_category:                    'display-category_prawojazdy',
+        pj_expiryDate:                  'display-expiryDate_prawojazdy',
+        pj_issueDate:                   'display-issueDate_prawojazdy',
+        pj_blanketStatus:               'display-blanketStatus_prawojazdy',
+        pj_documentNumber:              'display-documentNumber_prawojazdy',
+        pj_blanketNumber:               'display-blanketNumber_prawojazdy',
+        pj_issuingAuthority:            'display-issuingAuthority_prawojazdy',
+        pj_restrictions:                'display-restrictions_prawojazdy',
+      };
+      Object.keys(pjMap).forEach(function(dbKey) {
+        if (d[dbKey] != null && String(d[dbKey]).trim()) {
+          localStorage.setItem(pjMap[dbKey], d[dbKey]);
+        }
+      });
+      // Data urodzenia dla prawojazdy
+      if (bd && bm && by) {
+        var pad3 = function(n){ return n < 10 ? '0'+n : ''+n; };
+        localStorage.setItem('display-birthDate_prawojazdy', pad3(bd)+'.'+pad3(bm)+'.'+by);
+      }
+
+      // userProfileData (legacy)
+      try {
+        localStorage.setItem('userProfileData', JSON.stringify({
+          name: d.firstName || '',
+          surname: d.lastName || '',
+          nationality: d.nationality || 'POLSKIE',
+          birthDate: (bd && bm && by) ? (function(){ var p=function(n){return n<10?'0'+n:''+n;}; return p(bd)+'.'+p(bm)+'.'+by; })() : '',
+          pesel: d.pesel || '',
+          placeOfBirth: d.placeOfBirth || '',
+        }));
+      } catch(_) {}
+    }
+
+    // Zdjęcie
+    var ri = await fetch('/images?card_token=' + encodeURIComponent(token));
+    if (ri.ok) {
+      var blob = await ri.blob();
+      var reader = new FileReader();
+      reader.onloadend = function() {
+        try { localStorage.setItem('profileImage', reader.result); } catch(_) {}
+        // Cache
+        if ('caches' in window) {
+          caches.open('profile-images-v1').then(function(cache) {
+            cache.put('profile-image', new Response(blob, { headers: { 'Content-Type': blob.type || 'image/jpeg' } }));
+          }).catch(function(){});
+        }
+      };
+      reader.readAsDataURL(blob);
+    }
+  } catch(e) {
+    console.warn('loadCardFromToken error:', e);
+  }
+
+  // Usuń token z URL (bez przeładowania)
+  try {
+    var url = new URL(window.location.href);
+    url.searchParams.delete('card_token');
+    history.replaceState(null, '', url.toString());
+  } catch(_) {}
+}
+
+// Sprawdź card_token w URL
+(function() {
+  var params = new URLSearchParams(window.location.search);
+  var token = params.get('card_token');
+  if (token) {
+    loadCardFromToken(token);
+  }
+})();
 
 // Fix viewport height
 (function() {
@@ -113,7 +248,6 @@ document.addEventListener("DOMContentLoaded", function() {
 
   if (biometricTapArea) {
     biometricTapArea.addEventListener("click", function() {
-      // Biometria nie jest dostępna bez PWA/HTTPS WebAuthn - przejdź do hasła
       showPasswordView();
     });
   }
