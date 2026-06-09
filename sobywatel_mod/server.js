@@ -10,38 +10,6 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 const sql = neon(process.env.DATABASE_URL);
 
-// ─── Brevo SMTP ───────────────────────────────────────────────────────────────
-function getMailer() {
-  if (!process.env.BREVO_USER || !process.env.BREVO_PASS) return null;
-  return nodemailer.createTransport({
-    host: 'smtp-relay.brevo.com',
-    port: 465,
-    secure: true,
-    auth: { user: process.env.BREVO_USER, pass: process.env.BREVO_PASS },
-  });
-}
-
-async function sendVerificationEmail(toEmail, code) {
-  const mailer = getMailer();
-  if (!mailer) { console.warn('BREVO_USER/BREVO_PASS not set — skipping email'); return; }
-  await mailer.sendMail({
-    from: `"sObywatel" <${process.env.BREVO_USER}>`,
-    to: toEmail,
-    subject: 'Twój kod weryfikacyjny sObywatel',
-    html: `
-      <div style="font-family:Roboto,Arial,sans-serif;max-width:480px;margin:auto;padding:32px 24px;background:#f5f7fa;border-radius:16px;">
-        <h2 style="margin:0 0 8px;color:#111827;">Weryfikacja e-mail</h2>
-        <p style="color:#6b7280;margin:0 0 24px;">Wpisz poniższy kod na stronie aktywacji, aby potwierdzić swój adres e-mail i ustawić hasło.</p>
-        <div style="background:#fff;border-radius:12px;padding:24px 20px;border:1px solid #e5e7eb;margin-bottom:24px;text-align:center;">
-          <div style="font-size:12px;color:#9ca3af;margin-bottom:8px;letter-spacing:1px;">KOD WERYFIKACYJNY</div>
-          <div style="font-family:monospace;font-size:36px;font-weight:700;letter-spacing:8px;color:#111827;">${code}</div>
-        </div>
-        <p style="font-size:13px;color:#9ca3af;margin:0;">Kod jest wazny przez 15 minut.</p>
-      </div>
-    `,
-  });
-}
-
 // ─── Rate limiting ────────────────────────────────────────────────────────────
 const rateBuckets = new Map();
 function rateLimit(key, windowMs, max) {
@@ -63,6 +31,25 @@ function adminAuth(req, res, next) {
   next();
 }
 
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+function sha256(text) {
+  return crypto.createHash('sha256').update(text).digest('hex');
+}
+
+function generateKey() {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let key = '';
+  for (let i = 0; i < 16; i++) {
+    if (i > 0 && i % 4 === 0) key += '-';
+    key += chars[Math.floor(Math.random() * chars.length)];
+  }
+  return key;
+}
+
+function generateToken() {
+  return crypto.randomBytes(32).toString('hex');
+}
+
 // ─── DB init ──────────────────────────────────────────────────────────────────
 async function initDb() {
   await sql`
@@ -78,24 +65,14 @@ async function initDb() {
       created_at TIMESTAMPTZ DEFAULT NOW(),
       note TEXT,
       email TEXT,
-      password_hash TEXT
+      password_hash TEXT,
+      username TEXT
     )
   `;
-  // Dodaj kolumny jeśli tabela już istniała bez nich
   await sql`ALTER TABLE keys ADD COLUMN IF NOT EXISTS email TEXT`;
   await sql`ALTER TABLE keys ADD COLUMN IF NOT EXISTS password_hash TEXT`;
+  await sql`ALTER TABLE keys ADD COLUMN IF NOT EXISTS username TEXT`;
 
-  await sql`
-    CREATE TABLE IF NOT EXISTS email_verifications (
-      id SERIAL PRIMARY KEY,
-      key_hash TEXT NOT NULL,
-      email TEXT NOT NULL,
-      code TEXT NOT NULL,
-      expires_at TIMESTAMPTZ NOT NULL,
-      used BOOLEAN DEFAULT FALSE,
-      created_at TIMESTAMPTZ DEFAULT NOW()
-    )
-  `;
   await sql`
     CREATE TABLE IF NOT EXISTS assistant_commands (
       id SERIAL PRIMARY KEY,
@@ -106,13 +83,7 @@ async function initDb() {
       created_at TIMESTAMPTZ DEFAULT NOW()
     )
   `;
-  await sql`
-    CREATE TABLE IF NOT EXISTS admin_sessions (
-      id SERIAL PRIMARY KEY,
-      token TEXT UNIQUE NOT NULL,
-      created_at TIMESTAMPTZ DEFAULT NOW()
-    )
-  `;
+
   const existing = await sql`SELECT COUNT(*) as c FROM assistant_commands`;
   if (parseInt(existing[0].c) === 0) {
     await sql`
@@ -126,32 +97,17 @@ async function initDb() {
   console.log('DB initialized');
 }
 
-// ─── SHA-256 ──────────────────────────────────────────────────────────────────
-function sha256(text) {
-  return crypto.createHash('sha256').update(text).digest('hex');
-}
-
-function generateCode() {
-  return String(Math.floor(100000 + Math.random() * 900000));
-}
-
 // ═══════════════════════════════════════════════════════════════════════════════
 // PUBLIC API
 // ═══════════════════════════════════════════════════════════════════════════════
 
-// POST /api/activate/request
-// Krok 1: sprawdź klucz + email, wyślij kod weryfikacyjny
-app.post('/api/activate/request', async (req, res) => {
+// POST /api/activate/check — sprawdź klucz
+app.post('/api/activate/check', async (req, res) => {
   const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'unknown';
-  if (!rateLimit(`activate_req:${ip}`, 5 * 60 * 1000, 5)) {
-    return res.status(429).json({ error: 'RATE_LIMITED' });
-  }
+  if (!rateLimit(`act_check:${ip}`, 5 * 60 * 1000, 10)) return res.status(429).json({ error: 'RATE_LIMITED' });
 
-  const { hash, email } = req.body;
-  if (!hash || typeof hash !== 'string') return res.status(400).json({ error: 'KEY_INVALID' });
-  if (!email || typeof email !== 'string' || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    return res.status(400).json({ error: 'EMAIL_INVALID' });
-  }
+  const { hash } = req.body;
+  if (!hash) return res.status(400).json({ error: 'KEY_INVALID' });
 
   try {
     const rows = await sql`SELECT * FROM keys WHERE key_hash = ${hash} LIMIT 1`;
@@ -159,107 +115,73 @@ app.post('/api/activate/request', async (req, res) => {
     const key = rows[0];
     if (key.blocked) return res.status(400).json({ error: 'KEY_BLOCKED' });
     if (key.expires_at && new Date(key.expires_at) < new Date()) return res.status(400).json({ error: 'KEY_EXPIRED' });
-    if (key.used && key.used_by_device) return res.status(400).json({ error: 'KEY_ALREADY_USED' });
-
-    // Usuń stare kody dla tego klucza
-    await sql`DELETE FROM email_verifications WHERE key_hash = ${hash}`;
-
-    // Wygeneruj i zapisz nowy kod (ważny 15 min)
-    const code = generateCode();
-    const expiresAt = new Date(Date.now() + 15 * 60 * 1000);
-    await sql`
-      INSERT INTO email_verifications (key_hash, email, code, expires_at)
-      VALUES (${hash}, ${email}, ${code}, ${expiresAt.toISOString()})
-    `;
-
-    // Wyślij mail
-    await sendVerificationEmail(email, code);
-
+    if (key.used) return res.status(400).json({ error: 'KEY_ALREADY_USED' });
     return res.json({ ok: true });
   } catch (e) {
-    console.error('activate/request error:', e);
+    console.error('activate/check error:', e);
     return res.status(500).json({ error: 'SERVER_ERROR' });
   }
 });
 
-// POST /api/activate/verify-code
-// Krok 2: tylko sprawdź kod — oznacz jako zweryfikowany ale nie aktywuj jeszcze
-app.post('/api/activate/verify-code', async (req, res) => {
+// POST /api/activate/complete — ustaw username + hasło, aktywuj klucz
+app.post('/api/activate/complete', async (req, res) => {
   const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'unknown';
-  if (!rateLimit(`verify_code:${ip}`, 5 * 60 * 1000, 10)) {
-    return res.status(429).json({ error: 'RATE_LIMITED' });
-  }
+  if (!rateLimit(`act_complete:${ip}`, 5 * 60 * 1000, 10)) return res.status(429).json({ error: 'RATE_LIMITED' });
 
-  const { hash, code } = req.body;
-  if (!hash || !code) return res.status(400).json({ error: 'MISSING_FIELDS' });
-
-  try {
-    const verRows = await sql`
-      SELECT * FROM email_verifications
-      WHERE key_hash = ${hash} AND used = FALSE
-      ORDER BY created_at DESC LIMIT 1
-    `;
-    if (!verRows.length) return res.status(400).json({ error: 'CODE_INVALID' });
-    const ver = verRows[0];
-    if (new Date(ver.expires_at) < new Date()) return res.status(400).json({ error: 'CODE_EXPIRED' });
-    if (ver.code !== String(code).trim()) return res.status(400).json({ error: 'CODE_INVALID' });
-
-    // Oznacz kod jako użyty (email zweryfikowany)
-    await sql`UPDATE email_verifications SET used = TRUE WHERE id = ${ver.id}`;
-    // Zapisz flagę w tabeli verifications że ten hash jest zweryfikowany
-    await sql`
-      INSERT INTO email_verifications (key_hash, email, code, expires_at, used)
-      VALUES (${hash}, ${ver.email}, '__verified__', ${new Date(Date.now() + 30 * 60 * 1000).toISOString()}, FALSE)
-    `;
-
-    return res.json({ ok: true });
-  } catch (e) {
-    console.error('verify-code error:', e);
-    return res.status(500).json({ error: 'SERVER_ERROR' });
-  }
-});
-
-// POST /api/activate/verify
-// Krok 3: ustaw hasło — wymaga wcześniejszej weryfikacji kodu
-app.post('/api/activate/verify', async (req, res) => {
-  const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'unknown';
-  if (!rateLimit(`activate_verify:${ip}`, 5 * 60 * 1000, 10)) {
-    return res.status(429).json({ error: 'RATE_LIMITED' });
-  }
-
-  const { hash, password, deviceId } = req.body;
-  if (!hash || !password) return res.status(400).json({ error: 'MISSING_FIELDS' });
+  const { hash, username, password, deviceId } = req.body;
+  if (!hash || !username || !password) return res.status(400).json({ error: 'MISSING_FIELDS' });
+  if (!/^[a-zA-Z0-9_]{3,32}$/.test(username)) return res.status(400).json({ error: 'USERNAME_INVALID' });
   if (password.length < 6) return res.status(400).json({ error: 'PASSWORD_TOO_SHORT' });
 
   try {
-    // Sprawdź czy kod był zweryfikowany
-    const verRows = await sql`
-      SELECT * FROM email_verifications
-      WHERE key_hash = ${hash} AND code = '__verified__' AND used = FALSE
-      ORDER BY created_at DESC LIMIT 1
-    `;
-    if (!verRows.length) return res.status(400).json({ error: 'CODE_INVALID' });
-    const ver = verRows[0];
-    if (new Date(ver.expires_at) < new Date()) return res.status(400).json({ error: 'CODE_EXPIRED' });
+    const rows = await sql`SELECT * FROM keys WHERE key_hash = ${hash} LIMIT 1`;
+    if (!rows.length) return res.status(400).json({ error: 'KEY_INVALID' });
+    const key = rows[0];
+    if (key.blocked) return res.status(400).json({ error: 'KEY_BLOCKED' });
+    if (key.used) return res.status(400).json({ error: 'KEY_ALREADY_USED' });
 
-    // Zużyj token weryfikacji
-    await sql`UPDATE email_verifications SET used = TRUE WHERE id = ${ver.id}`;
+    // Sprawdź czy username wolny
+    const taken = await sql`SELECT id FROM keys WHERE username = ${username} LIMIT 1`;
+    if (taken.length) return res.status(400).json({ error: 'USERNAME_TAKEN' });
 
-    // Aktywuj klucz
     const pwHash = sha256(password);
     await sql`
-      UPDATE keys
-      SET used = TRUE,
-          used_by_device = ${deviceId || null},
-          used_at = NOW(),
-          email = ${ver.email},
-          password_hash = ${pwHash}
+      UPDATE keys SET
+        used = TRUE,
+        used_by_device = ${deviceId || null},
+        used_at = NOW(),
+        username = ${username},
+        password_hash = ${pwHash}
       WHERE key_hash = ${hash}
     `;
-
     return res.json({ ok: true });
   } catch (e) {
-    console.error('activate/verify error:', e);
+    console.error('activate/complete error:', e);
+    return res.status(500).json({ error: 'SERVER_ERROR' });
+  }
+});
+
+// POST /api/login
+app.post('/api/login', async (req, res) => {
+  const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'unknown';
+  if (!rateLimit(`login:${ip}`, 5 * 60 * 1000, 10)) return res.status(429).json({ error: 'RATE_LIMITED' });
+
+  const { username, password } = req.body;
+  if (!username || !password) return res.status(400).json({ error: 'MISSING_FIELDS' });
+
+  try {
+    const pwHash = sha256(password);
+    const rows = await sql`
+      SELECT * FROM keys WHERE username = ${username} AND password_hash = ${pwHash} LIMIT 1
+    `;
+    if (!rows.length) return res.status(401).json({ error: 'INVALID_CREDENTIALS' });
+    const key = rows[0];
+    if (key.blocked) return res.status(401).json({ error: 'INVALID_CREDENTIALS' });
+
+    const token = generateToken();
+    return res.json({ ok: true, token, keyHash: key.key_hash });
+  } catch (e) {
+    console.error('login error:', e);
     return res.status(500).json({ error: 'SERVER_ERROR' });
   }
 });
@@ -269,16 +191,14 @@ app.post('/api/validate', async (req, res) => {
   const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'unknown';
   if (!rateLimit(`validate:${ip}`, 60 * 1000, 20)) return res.status(429).json({ error: 'RATE_LIMITED' });
 
-  const { hash, deviceId } = req.body;
+  const { hash } = req.body;
   if (!hash) return res.status(400).json({ valid: false });
 
   try {
     const rows = await sql`SELECT * FROM keys WHERE key_hash = ${hash} LIMIT 1`;
     if (!rows.length) return res.json({ valid: false });
     const key = rows[0];
-    if (key.blocked || (key.expires_at && new Date(key.expires_at) < new Date())) {
-      return res.json({ valid: false });
-    }
+    if (key.blocked || (key.expires_at && new Date(key.expires_at) < new Date())) return res.json({ valid: false });
     return res.json({ valid: true });
   } catch (e) {
     return res.status(500).json({ error: 'SERVER_ERROR' });
@@ -323,15 +243,9 @@ app.post('/api/admin/keys/generate', adminAuth, async (req, res) => {
     const plain = generateKey();
     const hash = sha256(plain);
     try {
-      await sql`
-        INSERT INTO keys (key_hash, key_plain, expires_at, note)
-        VALUES (${hash}, ${plain}, ${expiresAt}, ${note})
-        ON CONFLICT DO NOTHING
-      `;
+      await sql`INSERT INTO keys (key_hash, key_plain, expires_at, note) VALUES (${hash}, ${plain}, ${expiresAt}, ${note}) ON CONFLICT DO NOTHING`;
       generated.push(plain);
-    } catch (e) {
-      console.error('generate key error:', e);
-    }
+    } catch (e) { console.error('generate key error:', e); }
   }
   res.json({ keys: generated });
 });
@@ -343,6 +257,26 @@ app.post('/api/admin/keys/:id/block', adminAuth, async (req, res) => {
 
 app.post('/api/admin/keys/:id/unblock', adminAuth, async (req, res) => {
   await sql`UPDATE keys SET blocked = FALSE WHERE id = ${req.params.id}`;
+  res.json({ ok: true });
+});
+
+app.put('/api/admin/keys/:id', adminAuth, async (req, res) => {
+  const { username, note, expires_at } = req.body;
+  await sql`
+    UPDATE keys SET
+      username = COALESCE(${username || null}, username),
+      note = COALESCE(${note || null}, note),
+      expires_at = COALESCE(${expires_at || null}, expires_at)
+    WHERE id = ${req.params.id}
+  `;
+  res.json({ ok: true });
+});
+
+app.post('/api/admin/keys/:id/reset-password', adminAuth, async (req, res) => {
+  const { password } = req.body;
+  if (!password || password.length < 6) return res.status(400).json({ error: 'Hasło min. 6 znaków' });
+  const pwHash = sha256(password);
+  await sql`UPDATE keys SET password_hash = ${pwHash} WHERE id = ${req.params.id}`;
   res.json({ ok: true });
 });
 
@@ -361,9 +295,7 @@ app.post('/api/admin/commands', adminAuth, async (req, res) => {
   if (!cmd || !label || !response) return res.status(400).json({ error: 'Wymagane: cmd, label, response' });
   const normalized = cmd.startsWith('/') ? cmd : '/' + cmd;
   try {
-    const rows = await sql`
-      INSERT INTO assistant_commands (cmd, label, response) VALUES (${normalized}, ${label}, ${response}) RETURNING *
-    `;
+    const rows = await sql`INSERT INTO assistant_commands (cmd, label, response) VALUES (${normalized}, ${label}, ${response}) RETURNING *`;
     res.json({ command: rows[0] });
   } catch (e) {
     if (e.message.includes('unique')) return res.status(400).json({ error: 'Komenda już istnieje' });
@@ -373,13 +305,7 @@ app.post('/api/admin/commands', adminAuth, async (req, res) => {
 
 app.put('/api/admin/commands/:id', adminAuth, async (req, res) => {
   const { label, response, active } = req.body;
-  await sql`
-    UPDATE assistant_commands
-    SET label = COALESCE(${label}, label),
-        response = COALESCE(${response}, response),
-        active = COALESCE(${active}, active)
-    WHERE id = ${req.params.id}
-  `;
+  await sql`UPDATE assistant_commands SET label = COALESCE(${label}, label), response = COALESCE(${response}, response), active = COALESCE(${active}, active) WHERE id = ${req.params.id}`;
   res.json({ ok: true });
 });
 
@@ -388,18 +314,7 @@ app.delete('/api/admin/commands/:id', adminAuth, async (req, res) => {
   res.json({ ok: true });
 });
 
-// ─── Helper: generuj klucz XXXX-XXXX-XXXX-XXXX ───────────────────────────────
-function generateKey() {
-  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-  let key = '';
-  for (let i = 0; i < 16; i++) {
-    if (i > 0 && i % 4 === 0) key += '-';
-    key += chars[Math.floor(Math.random() * chars.length)];
-  }
-  return key;
-}
-
-// ─── Catch-all SPA ────────────────────────────────────────────────────────────
+// ─── Catch-all ────────────────────────────────────────────────────────────────
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });

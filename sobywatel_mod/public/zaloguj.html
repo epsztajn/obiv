@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <script src="js/theme-init.js"></script>
+  <title>Logowanie</title>
+  <style>
+    :root{color-scheme:light;--bg:linear-gradient(135deg,#eef2ff,#f8fafc 60%,#e2e8f0);--card:#fff;--text:#0f172a;--muted:#475569;--border:#cbd5e1;--primary:#4338ca;--primary-soft:rgba(67,56,202,.12);--danger:#ef4444;--hint:#94a3b8;--shadow:0 20px 50px rgba(15,23,42,.13);--success:#22c55e}
+    :root[data-theme="dark"]{color-scheme:dark;--bg:linear-gradient(135deg,#0b1220,#111827 60%,#0f172a);--card:#0f172a;--text:#e2e8f0;--muted:#94a3b8;--border:#1e293b;--primary:#60a5fa;--primary-soft:rgba(96,165,250,.12);--danger:#f87171;--hint:#475569;--shadow:0 24px 60px rgba(0,0,0,.45)}
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    body{min-height:100vh;display:grid;place-items:center;background:var(--bg);font-family:"Roboto","Segoe UI",Arial,sans-serif;color:var(--text);padding:24px 0}
+    .card{width:min(92vw,400px);background:var(--card);border-radius:20px;padding:clamp(20px,5vw,32px);box-shadow:var(--shadow);border:1px solid var(--border)}
+    h1{font-size:22px;font-weight:700;margin-bottom:6px}
+    .sub{font-size:14px;color:var(--muted);margin-bottom:24px}
+    label{font-size:13px;font-weight:600;display:block;margin-bottom:5px}
+    input{width:100%;padding:11px 14px;font-size:15px;border-radius:10px;border:1px solid var(--border);outline:none;background:transparent;color:var(--text);transition:border .2s,box-shadow .2s;margin-bottom:14px}
+    input:focus{border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-soft)}
+    .btn{width:100%;padding:12px;font-size:15px;font-weight:700;border-radius:999px;border:none;background:var(--primary);color:#fff;cursor:pointer;transition:opacity .2s;margin-top:4px}
+    .btn:hover{opacity:.9}
+    .btn:disabled{opacity:.5;cursor:default}
+    .msg{margin-top:10px;font-size:13px}
+    .msg.err{color:var(--danger)}
+    .link{display:block;text-align:center;margin-top:16px;font-size:13px;color:var(--muted)}
+    .link a{color:var(--primary);text-decoration:none;font-weight:600}
+    .theme-toggle{position:fixed;top:16px;right:16px;width:38px;height:38px;border-radius:50%;border:1px solid var(--border);background:var(--card);color:var(--text);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+  </style>
+</head>
+<body>
+<button class="theme-toggle" id="themeToggle">☀️</button>
+<div class="card">
+  <h1>Logowanie</h1>
+  <p class="sub">Zaloguj się swoją nazwą użytkownika i hasłem.</p>
+  <label>Nazwa użytkownika</label>
+  <input id="username" type="text" autocomplete="username" placeholder="twoja_nazwa"/>
+  <label>Hasło</label>
+  <input id="password" type="password" autocomplete="current-password" placeholder="Hasło"/>
+  <button class="btn" id="loginBtn">Zaloguj się</button>
+  <div class="msg" id="msg"></div>
+  <div class="link">Nie masz konta? <a href="/activate.html">Aktywuj klucz</a></div>
+</div>
+
+<script>
+  const tt=document.getElementById('themeToggle');
+  function getTheme(){return document.documentElement.getAttribute('data-theme')==='dark'?'dark':'light'}
+  function updateTT(){tt.textContent=getTheme()==='dark'?'🌙':'☀️'}
+  tt.addEventListener('click',()=>{const n=getTheme()==='dark'?'light':'dark';document.documentElement.setAttribute('data-theme',n);try{localStorage.setItem('theme-preference',n)}catch(_){};updateTT()});
+  updateTT();
+
+  function setMsg(txt,type){const el=document.getElementById('msg');el.textContent=txt;el.className='msg'+(type?' '+type:'')}
+
+  const ERRS={INVALID_CREDENTIALS:'Niepoprawna nazwa lub hasło.',MISSING_FIELDS:'Uzupełnij wszystkie pola.',RATE_LIMITED:'Za dużo prób. Poczekaj chwilę.',SERVER_ERROR:'Błąd serwera.'};
+  function em(c){return ERRS[c]||'Nieznany błąd.'}
+
+  async function doLogin(){
+    setMsg('','');
+    const username=document.getElementById('username').value.trim();
+    const password=document.getElementById('password').value;
+    if(!username||!password){setMsg(em('MISSING_FIELDS'),'err');return}
+    const btn=document.getElementById('loginBtn');
+    btn.disabled=true;btn.textContent='Logowanie...';
+    try{
+      const r=await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username,password})});
+      const d=await r.json();
+      if(!r.ok||!d.ok){setMsg(em(d.error),'err');return}
+      // zapisz sesję
+      try{sessionStorage.setItem('user_session',d.token);sessionStorage.setItem('username',username)}catch(_){}
+      window.location.replace('/generator.html');
+    }catch(_){setMsg('Błąd połączenia.','err')}
+    finally{btn.disabled=false;btn.textContent='Zaloguj się'}
+  }
+
+  document.getElementById('loginBtn').addEventListener('click',doLogin);
+  document.getElementById('password').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin()});
+  document.getElementById('username').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('password').focus()});
+</script>
+</body>
+</html>
