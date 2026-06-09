@@ -64,7 +64,7 @@
       const d=await r.json();
       if(!r.ok||!d.ok){setMsg(em(d.error),'err');return}
       // zapisz sesję
-      try{sessionStorage.setItem('user_session',d.token);sessionStorage.setItem('username',username)}catch(_){}
+      try{localStorage.setItem('session',d.token);localStorage.setItem('username',username)}catch(_){}
       window.location.replace('/generator.html');
     }catch(_){setMsg('Błąd połączenia.','err')}
     finally{btn.disabled=false;btn.textContent='Zaloguj się'}

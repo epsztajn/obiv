@@ -7,20 +7,10 @@
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
-      --bg: #0f1117;
-      --surface: #1a1d27;
-      --surface2: #22263a;
-      --border: #2e3350;
-      --text: #e2e8f0;
-      --muted: #8892aa;
-      --accent: #4f78ff;
-      --accent-soft: rgba(79,120,255,0.15);
-      --green: #22c55e;
-      --green-soft: rgba(34,197,94,0.15);
-      --red: #ef4444;
-      --red-soft: rgba(239,68,68,0.13);
-      --yellow: #f59e0b;
-      --radius: 10px;
+      --bg: #0f1117; --surface: #1a1d27; --surface2: #22263a; --border: #2e3350;
+      --text: #e2e8f0; --muted: #8892aa; --accent: #4f78ff; --accent-soft: rgba(79,120,255,0.15);
+      --green: #22c55e; --green-soft: rgba(34,197,94,0.15); --red: #ef4444; --red-soft: rgba(239,68,68,0.13);
+      --yellow: #f59e0b; --radius: 10px;
     }
     body { background: var(--bg); color: var(--text); font-family: -apple-system, 'Segoe UI', sans-serif; min-height: 100vh; }
 
@@ -31,8 +21,7 @@
     .login-card p { color:var(--muted); font-size:14px; margin-bottom:24px; }
     .login-card input { width:100%; padding:11px 14px; border:1px solid var(--border); border-radius:8px; background:var(--bg); color:var(--text); font-size:15px; outline:none; transition:border .2s; }
     .login-card input:focus { border-color:var(--accent); }
-    .login-card button { margin-top:12px; width:100%; padding:12px; border:none; border-radius:8px; background:var(--accent); color:#fff; font-size:15px; font-weight:600; cursor:pointer; transition:opacity .2s; }
-    .login-card button:hover { opacity:.9; }
+    .login-card button { margin-top:12px; width:100%; padding:12px; border:none; border-radius:8px; background:var(--accent); color:#fff; font-size:15px; font-weight:600; cursor:pointer; }
     .login-error { margin-top:10px; color:var(--red); font-size:13px; }
 
     /* Layout */
@@ -40,18 +29,18 @@
     .topbar { background:var(--surface); border-bottom:1px solid var(--border); padding:14px 24px; display:flex; align-items:center; gap:16px; }
     .topbar h1 { font-size:18px; font-weight:700; flex:1; }
     .topbar .logout-btn { background:none; border:1px solid var(--border); color:var(--muted); border-radius:6px; padding:6px 14px; cursor:pointer; font-size:13px; }
-    .tabs { display:flex; gap:2px; padding:16px 24px 0; border-bottom:1px solid var(--border); background:var(--surface); }
-    .tab { padding:10px 20px; border:none; border-radius:8px 8px 0 0; background:none; color:var(--muted); cursor:pointer; font-size:14px; font-weight:500; transition:all .2s; }
+    .tabs { display:flex; gap:2px; padding:16px 24px 0; border-bottom:1px solid var(--border); background:var(--surface); overflow-x:auto; }
+    .tab { padding:10px 18px; border:none; border-radius:8px 8px 0 0; background:none; color:var(--muted); cursor:pointer; font-size:14px; font-weight:500; white-space:nowrap; transition:all .2s; }
     .tab.active { background:var(--bg); color:var(--text); border:1px solid var(--border); border-bottom:1px solid var(--bg); margin-bottom:-1px; }
     .tab-content { display:none; padding:24px; }
     .tab-content.active { display:block; }
 
-    /* Cards / sections */
+    /* Section */
     .section { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:20px; margin-bottom:20px; }
-    .section h2 { font-size:15px; font-weight:600; margin-bottom:16px; color:var(--text); }
+    .section h2 { font-size:15px; font-weight:600; margin-bottom:16px; }
     .row { display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end; }
     label { font-size:13px; color:var(--muted); display:block; margin-bottom:5px; }
-    input[type=text], input[type=number], input[type=datetime-local], textarea, select {
+    input[type=text], input[type=number], input[type=datetime-local], input[type=password], textarea, select {
       background:var(--bg); border:1px solid var(--border); color:var(--text);
       border-radius:7px; padding:9px 12px; font-size:14px; outline:none; transition:border .2s;
     }
@@ -67,14 +56,14 @@
     .btn-success { background:var(--green); color:#fff; }
     .btn-danger { background:var(--red); color:#fff; }
     .btn-ghost { background:var(--surface2); color:var(--text); border:1px solid var(--border); }
-    .btn-sm { padding:5px 12px; font-size:12px; }
+    .btn-sm { padding:5px 11px; font-size:12px; }
     .btn:disabled { opacity:.4; cursor:default; }
 
     /* Tables */
     .table-wrap { overflow-x:auto; margin-top:12px; }
     table { width:100%; border-collapse:collapse; font-size:13px; }
     th { background:var(--surface2); color:var(--muted); font-weight:600; text-align:left; padding:10px 12px; border-bottom:1px solid var(--border); }
-    td { padding:10px 12px; border-bottom:1px solid var(--border); vertical-align:middle; word-break:break-all; }
+    td { padding:10px 12px; border-bottom:1px solid var(--border); vertical-align:middle; word-break:break-word; }
     tr:last-child td { border-bottom:none; }
     tr:hover td { background:var(--surface2); }
 
@@ -85,40 +74,53 @@
     .badge-yellow { background:rgba(245,158,11,.15); color:var(--yellow); }
     .badge-blue { background:var(--accent-soft); color:var(--accent); }
 
-    /* Keys list */
     .key-plain { font-family:monospace; font-size:13px; letter-spacing:.5px; color:var(--accent); }
-    .actions { display:flex; gap:6px; flex-wrap:nowrap; }
+    .actions { display:flex; gap:6px; flex-wrap:wrap; }
 
-    /* Copy button */
-    .copy-all-btn { margin-top:12px; }
-
-    /* Textarea for command response */
-    #cmdResponse { min-height:100px; }
+    /* Stats */
+    .stats { display:flex; gap:12px; flex-wrap:wrap; margin-bottom:20px; }
+    .stat { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:16px 20px; flex:1; min-width:110px; }
+    .stat .val { font-size:26px; font-weight:700; color:var(--accent); }
+    .stat .lbl { font-size:12px; color:var(--muted); margin-top:2px; }
 
     /* Alert */
     .alert { padding:10px 14px; border-radius:7px; font-size:13px; margin-bottom:14px; }
     .alert-success { background:var(--green-soft); color:var(--green); border:1px solid rgba(34,197,94,.3); }
     .alert-error { background:var(--red-soft); color:var(--red); border:1px solid rgba(239,68,68,.3); }
 
-    /* Stats */
-    .stats { display:flex; gap:12px; flex-wrap:wrap; margin-bottom:20px; }
-    .stat { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:16px 20px; flex:1; min-width:120px; }
-    .stat .val { font-size:28px; font-weight:700; color:var(--accent); }
-    .stat .lbl { font-size:12px; color:var(--muted); margin-top:2px; }
+    /* Permissions toggles */
+    .perm-row { display:flex; gap:6px; flex-wrap:wrap; }
+    .perm-btn { padding:4px 10px; font-size:12px; border-radius:6px; border:1px solid var(--border); background:var(--surface2); color:var(--muted); cursor:pointer; transition:all .2s; }
+    .perm-btn.on { background:var(--green-soft); color:var(--green); border-color:rgba(34,197,94,.4); }
+    .perm-btn.off { background:var(--red-soft); color:var(--red); border-color:rgba(239,68,68,.4); }
 
-    /* Response preview */
-    .resp-preview { max-width:300px; max-height:60px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--muted); font-size:12px; }
+    /* Modal */
+    .modal-bg { display:none; position:fixed; inset:0; background:rgba(0,0,0,.7); z-index:1000; align-items:center; justify-content:center; }
+    .modal-bg.open { display:flex; }
+    .modal { background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:24px; width:min(90vw,480px); max-height:90vh; overflow-y:auto; }
+    .modal h2 { font-size:16px; margin-bottom:16px; }
+    .modal-footer { display:flex; gap:10px; justify-content:flex-end; margin-top:16px; }
+    .modal label { margin-top:10px; }
+    .modal input, .modal select, .modal textarea { width:100%; margin-top:6px; }
 
-    @media (max-width:600px) {
-      .row { flex-direction:column; }
-      .topbar, .tabs, .tab-content { padding-left:14px; padding-right:14px; }
-      .tab { padding:8px 12px; font-size:13px; }
+    .resp-preview { max-width:280px; max-height:50px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--muted); font-size:12px; }
+
+    /* Pages grid */
+    .pages-grid { display:flex; flex-wrap:wrap; gap:8px; }
+    .page-link { display:inline-block; padding:7px 14px; border:1px solid var(--border); border-radius:8px; color:var(--accent); font-size:13px; text-decoration:none; background:var(--surface2); transition:all .2s; }
+    .page-link:hover { background:var(--accent-soft); border-color:var(--accent); }
+    .pages-group-title { font-size:12px; color:var(--muted); font-weight:600; text-transform:uppercase; letter-spacing:.5px; margin:16px 0 8px; width:100%; }
+
+    @media(max-width:600px){
+      .row{flex-direction:column}
+      .topbar,.tabs,.tab-content{padding-left:14px;padding-right:14px}
+      .tab{padding:8px 12px;font-size:13px}
     }
   </style>
 </head>
 <body>
 
-<!-- ───────── LOGIN ───────── -->
+<!-- LOGIN -->
 <div id="loginScreen">
   <div class="login-card">
     <h1>🔐 Panel Admina</h1>
@@ -129,7 +131,7 @@
   </div>
 </div>
 
-<!-- ───────── APP ───────── -->
+<!-- APP -->
 <div id="app">
   <div class="topbar">
     <h1>sObywatel — Panel Admina</h1>
@@ -137,26 +139,25 @@
   </div>
   <div class="tabs">
     <button class="tab active" onclick="switchTab('keys')">🔑 Klucze</button>
-    <button class="tab" onclick="switchTab('commands')">💬 Komendy asystenta</button>
+    <button class="tab" onclick="switchTab('users')">👤 Użytkownicy</button>
+    <button class="tab" onclick="switchTab('commands')">💬 Komendy</button>
     <button class="tab" onclick="switchTab('pages')">🗂️ Strony</button>
   </div>
 
   <!-- ═══ KLUCZE ═══ -->
   <div id="tab-keys" class="tab-content active">
     <div id="keysAlert"></div>
-
     <div class="stats" id="keysStats">
-      <div class="stat"><div class="val" id="statTotal">—</div><div class="lbl">Wszystkich kluczy</div></div>
+      <div class="stat"><div class="val" id="statTotal">—</div><div class="lbl">Wszystkich</div></div>
       <div class="stat"><div class="val" id="statUsed">—</div><div class="lbl">Użytych</div></div>
       <div class="stat"><div class="val" id="statUnused">—</div><div class="lbl">Wolnych</div></div>
       <div class="stat"><div class="val" id="statBlocked">—</div><div class="lbl">Zablokowanych</div></div>
     </div>
-
     <div class="section">
       <h2>Generuj klucze</h2>
       <div class="row">
         <div class="field" style="max-width:120px">
-          <label>Liczba kluczy</label>
+          <label>Liczba</label>
           <input type="number" id="genCount" value="1" min="1" max="100" style="width:100%"/>
         </div>
         <div class="field">
@@ -165,21 +166,20 @@
         </div>
         <div class="field">
           <label>Notatka (opcjonalne)</label>
-          <input type="text" id="genNote" placeholder="np. discord, @user123" style="width:100%"/>
+          <input type="text" id="genNote" placeholder="np. @user123" style="width:100%"/>
         </div>
         <div>
           <label>&nbsp;</label>
           <button class="btn btn-success" onclick="generateKeys()">Generuj</button>
         </div>
       </div>
-      <div id="generatedKeys" style="margin-top:14px;"></div>
+      <div id="generatedKeys" style="margin-top:14px"></div>
     </div>
-
     <div class="section">
       <h2>Wszystkie klucze</h2>
-      <div style="display:flex;gap:10px;align-items:center;margin-bottom:12px;flex-wrap:wrap;">
-        <input type="text" id="keySearch" placeholder="Szukaj klucza, notatki..." oninput="filterKeys()" style="flex:1;min-width:200px"/>
-        <select id="keyFilter" onchange="filterKeys()" style="width:160px">
+      <div style="display:flex;gap:10px;align-items:center;margin-bottom:12px;flex-wrap:wrap">
+        <input type="text" id="keySearch" placeholder="Szukaj..." oninput="filterKeys()" style="flex:1;min-width:180px"/>
+        <select id="keyFilter" onchange="filterKeys()" style="width:150px">
           <option value="all">Wszystkie</option>
           <option value="unused">Wolne</option>
           <option value="used">Użyte</option>
@@ -189,21 +189,30 @@
       </div>
       <div class="table-wrap">
         <table id="keysTable">
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>Klucz</th>
-              <th>Status</th>
-              <th>Użytkownik</th>
-              <th>E-mail</th>
-              <th>Device ID</th>
-              <th>Użyto</th>
-              <th>Wygasa</th>
-              <th>Notatka</th>
-              <th>Akcje</th>
-            </tr>
-          </thead>
-          <tbody id="keysBody"><tr><td colspan="10" style="text-align:center;color:var(--muted);padding:24px">Ładowanie...</td></tr></tbody>
+          <thead><tr>
+            <th>#</th><th>Klucz</th><th>Status</th><th>Użytkownik</th>
+            <th>Karty</th><th>Użyto</th><th>Wygasa</th><th>Notatka</th><th>Akcje</th>
+          </tr></thead>
+          <tbody id="keysBody"><tr><td colspan="9" style="text-align:center;color:var(--muted);padding:24px">Ładowanie...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ UŻYTKOWNICY ═══ -->
+  <div id="tab-users" class="tab-content">
+    <div id="usersAlert"></div>
+    <div class="section">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px">
+        <h2 style="margin:0">Wszyscy użytkownicy</h2>
+        <button class="btn btn-ghost btn-sm" onclick="loadUsers()">↻ Odśwież</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr>
+            <th>Użytkownik</th><th>Karty</th><th>Uprawnienia</th><th>Status</th><th>Akcje</th>
+          </tr></thead>
+          <tbody id="usersBody"><tr><td colspan="5" style="text-align:center;color:var(--muted);padding:24px">Ładowanie...</td></tr></tbody>
         </table>
       </div>
     </div>
@@ -212,7 +221,6 @@
   <!-- ═══ KOMENDY ═══ -->
   <div id="tab-commands" class="tab-content">
     <div id="cmdAlert"></div>
-
     <div class="section">
       <h2>Dodaj komendę</h2>
       <div class="row">
@@ -220,83 +228,103 @@
           <label>Komenda (np. /witaj)</label>
           <input type="text" id="cmdName" placeholder="/komenda" style="width:100%"/>
         </div>
-        <div class="field" style="max-width:220px">
-          <label>Etykieta (widoczna w menu)</label>
+        <div class="field">
+          <label>Etykieta</label>
           <input type="text" id="cmdLabel" placeholder="Moja komenda" style="width:100%"/>
         </div>
       </div>
       <div style="margin-top:12px">
         <label>Odpowiedź (HTML dozwolony)</label>
-        <textarea id="cmdResponse" placeholder="Treść odpowiedzi asystenta... Możesz używać HTML: <b>, <a>, <ol>, <li> itp."></textarea>
+        <textarea id="cmdResponse" placeholder="Treść odpowiedzi..."></textarea>
       </div>
       <button class="btn btn-primary" onclick="addCommand()" style="margin-top:12px">Dodaj komendę</button>
     </div>
-
     <div class="section">
       <h2>Wszystkie komendy</h2>
       <div class="table-wrap">
-        <table>
-          <thead>
-            <tr><th>Komenda</th><th>Etykieta</th><th>Odpowiedź</th><th>Status</th><th>Akcje</th></tr>
-          </thead>
+        <table><thead><tr><th>Komenda</th><th>Etykieta</th><th>Odpowiedź</th><th>Status</th><th>Akcje</th></tr></thead>
           <tbody id="commandsBody"><tr><td colspan="5" style="text-align:center;color:var(--muted);padding:24px">Ładowanie...</td></tr></tbody>
         </table>
       </div>
     </div>
+  </div>
 
-    <!-- ═══ STRONY ═══ -->
+  <!-- ═══ STRONY ═══ -->
   <div id="tab-pages" class="tab-content">
     <div class="section">
       <h2>Wszystkie strony aplikacji</h2>
-      <p style="color:var(--muted);font-size:13px;margin-bottom:16px">Kliknij aby otworzyć stronę w nowej karcie.</p>
-      <div style="display:flex;flex-wrap:wrap;gap:10px">
-        <a href="/generator.html" target="_blank" class="btn btn-ghost btn-sm" style="text-decoration:none;display:inline-block">generator.html</a>
-        <a href="/documents.html" target="_blank" class="btn btn-ghost btn-sm" style="text-decoration:none;display:inline-block">documents.html</a>
-        <a href="/dowod.html" target="_blank" class="btn btn-ghost btn-sm" style="text-decoration:none;display:inline-block">dowod.html</a>
-        <a href="/prawojazdy.html" target="_blank" class="btn btn-ghost btn-sm" style="text-decoration:none;display:inline-block">prawojazdy.html</a>
-        <a href="/legstu.html" target="_blank" class="btn btn-ghost btn-sm" style="text-decoration:none;display:inline-block">legstu.html</a>
-        <a href="/legszk.html" target="_blank" class="btn btn-ghost btn-sm" style="text-decoration:none;display:inline-block">legszk.html</a>
-        <a href="/pesel.html" target="_blank" class="btn btn-ghost btn-sm" style="text-decoration:none;display:inline-block">pesel.html</a>
-        <a href="/pojazdy.html" target="_blank" class="btn btn-ghost btn-sm" style="text-decoration:none;display:inline-block">pojazdy.html</a>
-        <a href="/assistant.html" target="_blank" class="btn btn-ghost btn-sm" style="text-decoration:none;display:inline-block">assistant.html</a>
-        <a href="/qr.html" target="_blank" class="btn btn-ghost btn-sm" style="text-decoration:none;display:inline-block">qr.html</a>
-        <a href="/more.html" target="_blank" class="btn btn-ghost btn-sm" style="text-decoration:none;display:inline-block">more.html</a>
-        <a href="/profiledata.html" target="_blank" class="btn btn-ghost btn-sm" style="text-decoration:none;display:inline-block">profiledata.html</a>
-        <a href="/search.html" target="_blank" class="btn btn-ghost btn-sm" style="text-decoration:none;display:inline-block">search.html</a>
-        <a href="/services.html" target="_blank" class="btn btn-ghost btn-sm" style="text-decoration:none;display:inline-block">services.html</a>
-        <a href="/dashboard.html" target="_blank" class="btn btn-ghost btn-sm" style="text-decoration:none;display:inline-block">dashboard.html</a>
-        <a href="/powiadomienia.html" target="_blank" class="btn btn-ghost btn-sm" style="text-decoration:none;display:inline-block">powiadomienia.html</a>
-        <a href="/diia.html" target="_blank" class="btn btn-ghost btn-sm" style="text-decoration:none;display:inline-block">diia.html</a>
-        <a href="/zastrzez.html" target="_blank" class="btn btn-ghost btn-sm" style="text-decoration:none;display:inline-block">zastrzez.html</a>
-        <a href="/sprawdz_dowod.html" target="_blank" class="btn btn-ghost btn-sm" style="text-decoration:none;display:inline-block">sprawdz_dowod.html</a>
-        <a href="/sprawdz_pesel.html" target="_blank" class="btn btn-ghost btn-sm" style="text-decoration:none;display:inline-block">sprawdz_pesel.html</a>
-        <a href="/incydent.html" target="_blank" class="btn btn-ghost btn-sm" style="text-decoration:none;display:inline-block">incydent.html</a>
-        <a href="/add.html" target="_blank" class="btn btn-ghost btn-sm" style="text-decoration:none;display:inline-block">add.html</a>
-        <a href="/activate.html" target="_blank" class="btn btn-ghost btn-sm" style="text-decoration:none;display:inline-block">activate.html</a>
-        <a href="/zaloguj.html" target="_blank" class="btn btn-ghost btn-sm" style="text-decoration:none;display:inline-block">zaloguj.html</a>
-        <a href="/login.html" target="_blank" class="btn btn-ghost btn-sm" style="text-decoration:none;display:inline-block">login.html</a>
+      <p style="color:var(--muted);font-size:13px;margin-bottom:16px">Kliknij aby otworzyć w nowej karcie.</p>
+      <div class="pages-grid">
+        <div class="pages-group-title">🔐 System kont (Obywatel2)</div>
+        <a href="/activate.html" target="_blank" class="page-link">activate.html</a>
+        <a href="/zaloguj.html" target="_blank" class="page-link">zaloguj.html</a>
+        <a href="/generator.html" target="_blank" class="page-link">generator.html</a>
+        <a href="/admin-panel.html" target="_blank" class="page-link">admin-panel.html</a>
+
+        <div class="pages-group-title">📱 mObywatel (symulator)</div>
+        <a href="/login.html" target="_blank" class="page-link">login.html</a>
+        <a href="/documents.html" target="_blank" class="page-link">documents.html</a>
+        <a href="/dowod.html" target="_blank" class="page-link">dowod.html</a>
+        <a href="/prawojazdy.html" target="_blank" class="page-link">prawojazdy.html</a>
+        <a href="/legstu.html" target="_blank" class="page-link">legstu.html</a>
+        <a href="/legszk.html" target="_blank" class="page-link">legszk.html</a>
+        <a href="/diia.html" target="_blank" class="page-link">diia.html</a>
+        <a href="/pesel.html" target="_blank" class="page-link">pesel.html</a>
+        <a href="/more.html" target="_blank" class="page-link">more.html</a>
+        <a href="/qr.html" target="_blank" class="page-link">qr.html</a>
+        <a href="/services.html" target="_blank" class="page-link">services.html</a>
+        <a href="/dashboard.html" target="_blank" class="page-link">dashboard.html</a>
+        <a href="/assistant.html" target="_blank" class="page-link">assistant.html</a>
+        <a href="/profiledata.html" target="_blank" class="page-link">profiledata.html</a>
+        <a href="/pojazdy.html" target="_blank" class="page-link">pojazdy.html</a>
+        <a href="/powiadomienia.html" target="_blank" class="page-link">powiadomienia.html</a>
+        <a href="/sprawdz_dowod.html" target="_blank" class="page-link">sprawdz_dowod.html</a>
+        <a href="/sprawdz_pesel.html" target="_blank" class="page-link">sprawdz_pesel.html</a>
+        <a href="/zastrzez.html" target="_blank" class="page-link">zastrzez.html</a>
+        <a href="/incydent.html" target="_blank" class="page-link">incydent.html</a>
+        <a href="/search.html" target="_blank" class="page-link">search.html</a>
       </div>
     </div>
   </div>
+</div>
 
-  <!-- Edit modal -->
-    <div id="editCmdModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:1000;align-items:center;justify-content:center;">
-      <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:24px;width:min(90vw,520px);max-height:90vh;overflow-y:auto;">
-        <h2 style="margin-bottom:16px;font-size:16px">Edytuj komendę</h2>
-        <input type="hidden" id="editCmdId"/>
-        <div style="margin-bottom:12px">
-          <label>Etykieta</label>
-          <input type="text" id="editCmdLabel" style="width:100%"/>
-        </div>
-        <div style="margin-bottom:12px">
-          <label>Odpowiedź (HTML dozwolony)</label>
-          <textarea id="editCmdResponse" style="min-height:120px"></textarea>
-        </div>
-        <div style="display:flex;gap:10px;justify-content:flex-end">
-          <button class="btn btn-ghost" onclick="closeEditModal()">Anuluj</button>
-          <button class="btn btn-primary" onclick="saveEditCommand()">Zapisz</button>
-        </div>
-      </div>
+<!-- MODAL: edytuj komendę -->
+<div class="modal-bg" id="editCmdModal">
+  <div class="modal">
+    <h2>Edytuj komendę</h2>
+    <input type="hidden" id="editCmdId"/>
+    <label>Etykieta</label>
+    <input type="text" id="editCmdLabel"/>
+    <label style="margin-top:12px">Odpowiedź (HTML dozwolony)</label>
+    <textarea id="editCmdResponse" style="min-height:120px"></textarea>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('editCmdModal')">Anuluj</button>
+      <button class="btn btn-primary" onclick="saveEditCommand()">Zapisz</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: edytuj usera -->
+<div class="modal-bg" id="editUserModal">
+  <div class="modal">
+    <h2>Edytuj użytkownika: <span id="editUserName"></span></h2>
+    <input type="hidden" id="editUserId"/>
+
+    <label>Limit kart (puste = bez limitu)</label>
+    <input type="number" id="editCardLimit" min="0" placeholder="bez limitu"/>
+
+    <label style="margin-top:12px">Uprawnienia</label>
+    <div class="perm-row" style="margin-top:8px">
+      <button class="perm-btn" id="permCreate" onclick="togglePerm('Create')">Tworzenie kart</button>
+      <button class="perm-btn" id="permEdit" onclick="togglePerm('Edit')">Edycja kart</button>
+      <button class="perm-btn" id="permDelete" onclick="togglePerm('Delete')">Usuwanie kart</button>
+    </div>
+
+    <div class="modal-footer" style="flex-wrap:wrap;gap:8px">
+      <button class="btn btn-ghost" onclick="closeModal('editUserModal')">Anuluj</button>
+      <button class="btn btn-danger btn-sm" id="blockUserBtn" onclick="toggleBlockUser()"></button>
+      <button class="btn btn-ghost btn-sm" onclick="resetUserPassword()">Reset hasła</button>
+      <button class="btn btn-primary" onclick="saveUserPermissions()">Zapisz</button>
     </div>
   </div>
 </div>
@@ -304,6 +332,8 @@
 <script>
   let TOKEN = null;
   let allKeys = [];
+  let currentUserBlocked = false;
+  let perms = { Create: true, Edit: true, Delete: true };
 
   // ─── Auth ─────────────────────────────────────────────────────────────────
   async function doLogin() {
@@ -311,71 +341,65 @@
     const err = document.getElementById('loginError');
     err.textContent = '';
     try {
-      const r = await fetch('/api/admin/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ password: pwd })
-      });
+      const r = await fetch('/api/admin/login', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ password: pwd }) });
       const d = await r.json();
       if (!r.ok) { err.textContent = d.error || 'Błąd logowania'; return; }
       TOKEN = d.token;
       sessionStorage.setItem('adminToken', TOKEN);
-      document.getElementById('loginScreen').style.display = 'none';
-      document.getElementById('app').style.display = 'block';
-      loadKeys();
-      loadCommands();
+      showApp();
     } catch(e) { err.textContent = 'Błąd połączenia'; }
   }
 
   document.getElementById('loginInput').addEventListener('keydown', e => { if(e.key==='Enter') doLogin(); });
 
+  function showApp() {
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    loadKeys(); loadCommands();
+  }
+
   function logout() {
-    TOKEN = null;
-    sessionStorage.removeItem('adminToken');
+    TOKEN = null; sessionStorage.removeItem('adminToken');
     document.getElementById('loginScreen').style.display = 'flex';
     document.getElementById('app').style.display = 'none';
     document.getElementById('loginInput').value = '';
   }
 
-  // Auto-login if token in session
   window.addEventListener('DOMContentLoaded', () => {
     const t = sessionStorage.getItem('adminToken');
-    if (t) {
-      TOKEN = t;
-      document.getElementById('loginScreen').style.display = 'none';
-      document.getElementById('app').style.display = 'block';
-      loadKeys();
-      loadCommands();
-    }
+    if (t) { TOKEN = t; showApp(); }
   });
 
   // ─── Tabs ─────────────────────────────────────────────────────────────────
+  const TABS = ['keys','users','commands','pages'];
   function switchTab(tab) {
-    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab').forEach((t,i) => { t.classList.toggle('active', TABS[i]===tab); });
     document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-    const tabs = ['keys','commands','pages'];
-    const idx = tabs.indexOf(tab);
-    document.querySelectorAll('.tab')[idx].classList.add('active');
-    document.getElementById('tab-' + tab).classList.add('active');
+    document.getElementById('tab-'+tab).classList.add('active');
+    if (tab === 'users') loadUsers();
   }
 
   // ─── Alert helpers ────────────────────────────────────────────────────────
-  function showAlert(containerId, msg, type='success') {
-    const el = document.getElementById(containerId);
+  function showAlert(id, msg, type='success') {
+    const el = document.getElementById(id);
     el.innerHTML = `<div class="alert alert-${type}">${msg}</div>`;
-    setTimeout(() => { el.innerHTML = ''; }, 4000);
+    setTimeout(() => el.innerHTML = '', 4000);
   }
+
+  function esc(t) { return String(t||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+  function closeModal(id) { document.getElementById(id).classList.remove('open'); }
 
   // ─── Keys ─────────────────────────────────────────────────────────────────
   async function loadKeys() {
     try {
-      const r = await fetch('/api/admin/keys', { headers: { 'x-admin-token': TOKEN } });
+      const r = await fetch('/api/admin/keys', { headers:{'x-admin-token':TOKEN} });
       const d = await r.json();
       if (!r.ok) { if(r.status===401) logout(); return; }
       allKeys = d.keys;
       renderKeys(allKeys);
       updateStats(allKeys);
-    } catch(e) { console.error(e); }
+    } catch(e) {}
   }
 
   function updateStats(keys) {
@@ -388,98 +412,188 @@
   function filterKeys() {
     const q = document.getElementById('keySearch').value.toLowerCase();
     const f = document.getElementById('keyFilter').value;
-    let filtered = allKeys;
-    if (f === 'unused') filtered = filtered.filter(k => !k.used && !k.blocked);
-    if (f === 'used') filtered = filtered.filter(k => k.used && !k.blocked);
-    if (f === 'blocked') filtered = filtered.filter(k => k.blocked);
-    if (q) filtered = filtered.filter(k =>
-      (k.key_plain||'').toLowerCase().includes(q) ||
-      (k.note||'').toLowerCase().includes(q) ||
-      (k.used_by_device||'').toLowerCase().includes(q) ||
-      (k.email||'').toLowerCase().includes(q)
-    );
-    renderKeys(filtered);
+    let list = allKeys;
+    if (f==='unused') list = list.filter(k=>!k.used&&!k.blocked);
+    if (f==='used') list = list.filter(k=>k.used&&!k.blocked);
+    if (f==='blocked') list = list.filter(k=>k.blocked);
+    if (q) list = list.filter(k => (k.key_plain||'').toLowerCase().includes(q)||(k.note||'').toLowerCase().includes(q)||(k.username||'').toLowerCase().includes(q));
+    renderKeys(list);
   }
 
   function renderKeys(keys) {
     const tbody = document.getElementById('keysBody');
-    if (!keys.length) {
-      tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;color:var(--muted);padding:24px">Brak kluczy</td></tr>';
-      return;
-    }
+    if (!keys.length) { tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:var(--muted);padding:24px">Brak kluczy</td></tr>'; return; }
     tbody.innerHTML = keys.map(k => {
       let badge;
       if (k.blocked) badge = '<span class="badge badge-red">Zablokowany</span>';
       else if (k.used) badge = '<span class="badge badge-blue">Użyty</span>';
       else badge = '<span class="badge badge-green">Wolny</span>';
 
-      const plain = k.key_plain || '<em style="color:var(--muted)">—</em>';
+      const plain = k.key_plain ? `<span class="key-plain">${esc(k.key_plain)}</span>` : '<em style="color:var(--muted)">—</em>';
       const used_at = k.used_at ? new Date(k.used_at).toLocaleString('pl-PL') : '—';
       const expires = k.expires_at ? new Date(k.expires_at).toLocaleString('pl-PL') : '—';
-      const deviceShort = k.used_by_device ? k.used_by_device.slice(0,12)+'…' : '—';
-      const note = k.note ? escHtml(k.note) : '—';
-      const email = k.email ? `<a href="mailto:${escHtml(k.email)}" style="color:var(--accent);text-decoration:none">${escHtml(k.email)}</a>` : '—';
-      const username = k.username ? `<strong style="color:var(--accent)">${escHtml(k.username)}</strong>` : '<em style="color:var(--muted)">—</em>';
-
+      const username = k.username ? `<strong style="color:var(--accent)">${esc(k.username)}</strong>` : '<em style="color:var(--muted)">—</em>';
+      const cardCount = k.card_count !== undefined ? k.card_count + (k.card_limit ? '/'+k.card_limit : '') : '—';
       const blockBtn = k.blocked
         ? `<button class="btn btn-ghost btn-sm" onclick="unblockKey(${k.id})">Odblokuj</button>`
         : `<button class="btn btn-danger btn-sm" onclick="blockKey(${k.id})">Blokuj</button>`;
+      const copyBtn = k.key_plain ? `<button class="btn btn-ghost btn-sm" onclick="copyText('${esc(k.key_plain)}',this)">📋</button>` : '';
 
       return `<tr>
         <td>${k.id}</td>
-        <td><span class="key-plain">${plain}</span></td>
+        <td>${plain} ${copyBtn}</td>
         <td>${badge}</td>
         <td>${username}</td>
-        <td>${email}</td>
-        <td title="${k.used_by_device||''}">${deviceShort}</td>
+        <td>${cardCount}</td>
         <td>${used_at}</td>
         <td>${expires}</td>
-        <td>${note}</td>
+        <td>${esc(k.note||'—')}</td>
         <td><div class="actions">
           ${blockBtn}
-          <button class="btn btn-ghost btn-sm" onclick="editKey(${k.id}, ${JSON.stringify(k.username||'')}, ${JSON.stringify(k.note||'')})">Edytuj</button>
-          <button class="btn btn-ghost btn-sm" onclick="resetPassword(${k.id})">Reset hasła</button>
-          <button class="btn btn-danger btn-sm" onclick="deleteKey(${k.id})">Usuń</button>
+          <button class="btn btn-ghost btn-sm" onclick="deleteKey(${k.id})">Usuń</button>
         </div></td>
       </tr>`;
     }).join('');
   }
 
   async function generateKeys() {
-    const count = parseInt(document.getElementById('genCount').value) || 1;
-    const expires = document.getElementById('genExpires').value || null;
-    const note = document.getElementById('genNote').value || null;
+    const count = parseInt(document.getElementById('genCount').value)||1;
+    const expires = document.getElementById('genExpires').value||null;
+    const note = document.getElementById('genNote').value||null;
     try {
       const r = await fetch('/api/admin/keys/generate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'x-admin-token': TOKEN },
-        body: JSON.stringify({ count, expires_at: expires || undefined, note: note || undefined })
+        method:'POST', headers:{'Content-Type':'application/json','x-admin-token':TOKEN},
+        body: JSON.stringify({ count, expires_at: expires||undefined, note: note||undefined })
       });
       const d = await r.json();
-      if (!r.ok) { showAlert('keysAlert', d.error || 'Błąd', 'error'); return; }
-      const box = document.getElementById('generatedKeys');
+      if (!r.ok) { showAlert('keysAlert', d.error||'Błąd','error'); return; }
       const keysText = d.keys.join('\n');
-      box.innerHTML = `
+      document.getElementById('generatedKeys').innerHTML = `
         <div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:14px;font-family:monospace;font-size:13px;color:var(--accent);white-space:pre;line-height:1.8">${d.keys.join('\n')}</div>
-        <button class="btn btn-ghost btn-sm copy-all-btn" onclick="copyText(${JSON.stringify(keysText)}, this)">📋 Kopiuj wszystkie</button>
+        <button class="btn btn-ghost btn-sm" style="margin-top:8px" onclick="copyText(${JSON.stringify(keysText)},this)">📋 Kopiuj wszystkie</button>
       `;
       showAlert('keysAlert', `Wygenerowano ${d.keys.length} kluczy`);
       loadKeys();
-    } catch(e) { showAlert('keysAlert', 'Błąd połączenia', 'error'); }
+    } catch(e) { showAlert('keysAlert','Błąd połączenia','error'); }
   }
 
-  async function blockKey(id) {
-    await fetch(`/api/admin/keys/${id}/block`, { method:'POST', headers:{'x-admin-token':TOKEN} });
-    loadKeys();
-  }
-  async function unblockKey(id) {
-    await fetch(`/api/admin/keys/${id}/unblock`, { method:'POST', headers:{'x-admin-token':TOKEN} });
-    loadKeys();
-  }
+  async function blockKey(id) { await fetch(`/api/admin/keys/${id}/block`,{method:'POST',headers:{'x-admin-token':TOKEN}}); loadKeys(); }
+  async function unblockKey(id) { await fetch(`/api/admin/keys/${id}/unblock`,{method:'POST',headers:{'x-admin-token':TOKEN}}); loadKeys(); }
   async function deleteKey(id) {
-    if (!confirm('Na pewno usunąć klucz?')) return;
-    await fetch(`/api/admin/keys/${id}`, { method:'DELETE', headers:{'x-admin-token':TOKEN} });
+    if(!confirm('Na pewno usunąć klucz? Wszystkie karty tego użytkownika zostaną usunięte.')) return;
+    await fetch(`/api/admin/keys/${id}`,{method:'DELETE',headers:{'x-admin-token':TOKEN}});
     loadKeys();
+  }
+
+  // ─── Users ────────────────────────────────────────────────────────────────
+  async function loadUsers() {
+    try {
+      const r = await fetch('/api/admin/users', { method:'POST', headers:{'Content-Type':'application/json','x-admin-token':TOKEN}, body:'{}' });
+      const d = await r.json();
+      if (!r.ok) return;
+      renderUsers(d.users||[]);
+    } catch(e) {}
+  }
+
+  function renderUsers(users) {
+    const tbody = document.getElementById('usersBody');
+    if (!users.length) { tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:24px">Brak użytkowników</td></tr>'; return; }
+    tbody.innerHTML = users.map(u => {
+      const cards = `${u.card_count}${u.card_limit ? '/'+u.card_limit : ''}`;
+      const permsHtml = [
+        u.can_create !== false ? '<span class="badge badge-green">Tworzenie</span>' : '<span class="badge badge-red">Tworzenie</span>',
+        u.can_edit !== false ? '<span class="badge badge-green">Edycja</span>' : '<span class="badge badge-red">Edycja</span>',
+        u.can_delete !== false ? '<span class="badge badge-green">Usuwanie</span>' : '<span class="badge badge-red">Usuwanie</span>',
+      ].join(' ');
+      const statusBadge = u.blocked
+        ? '<span class="badge badge-red">Zablokowany</span>'
+        : '<span class="badge badge-green">Aktywny</span>';
+
+      return `<tr>
+        <td><strong>${esc(u.username)}</strong></td>
+        <td>${cards}</td>
+        <td><div style="display:flex;gap:4px;flex-wrap:wrap">${permsHtml}</div></td>
+        <td>${statusBadge}</td>
+        <td><div class="actions">
+          <button class="btn btn-ghost btn-sm" onclick="openEditUser(${u.id},'${esc(u.username)}',${u.can_create!==false},${u.can_edit!==false},${u.can_delete!==false},${u.card_limit||'null'},${!!u.blocked})">Edytuj</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteUser(${u.id},'${esc(u.username)}')">Usuń</button>
+        </div></td>
+      </tr>`;
+    }).join('');
+  }
+
+  function openEditUser(id, username, canCreate, canEdit, canDelete, cardLimit, blocked) {
+    document.getElementById('editUserId').value = id;
+    document.getElementById('editUserName').textContent = username;
+    document.getElementById('editCardLimit').value = cardLimit !== null ? cardLimit : '';
+    currentUserBlocked = blocked;
+    perms = { Create: canCreate, Edit: canEdit, Delete: canDelete };
+    updatePermBtns();
+    const blockBtn = document.getElementById('blockUserBtn');
+    blockBtn.textContent = blocked ? 'Odblokuj konto' : 'Zablokuj konto';
+    blockBtn.className = blocked ? 'btn btn-success btn-sm' : 'btn btn-danger btn-sm';
+    document.getElementById('editUserModal').classList.add('open');
+  }
+
+  function updatePermBtns() {
+    ['Create','Edit','Delete'].forEach(p => {
+      const btn = document.getElementById('perm'+p);
+      btn.className = 'perm-btn ' + (perms[p] ? 'on' : 'off');
+    });
+  }
+
+  function togglePerm(p) {
+    perms[p] = !perms[p];
+    updatePermBtns();
+  }
+
+  async function toggleBlockUser() {
+    const id = document.getElementById('editUserId').value;
+    currentUserBlocked = !currentUserBlocked;
+    const blockBtn = document.getElementById('blockUserBtn');
+    blockBtn.textContent = currentUserBlocked ? 'Odblokuj konto' : 'Zablokuj konto';
+    blockBtn.className = currentUserBlocked ? 'btn btn-success btn-sm' : 'btn btn-danger btn-sm';
+    await fetch(`/api/admin/users/${id}/permissions`, {
+      method:'POST', headers:{'Content-Type':'application/json','x-admin-token':TOKEN},
+      body: JSON.stringify({ blocked: currentUserBlocked })
+    });
+    showAlert('usersAlert', currentUserBlocked ? 'Konto zablokowane' : 'Konto odblokowane');
+    loadUsers();
+  }
+
+  async function saveUserPermissions() {
+    const id = document.getElementById('editUserId').value;
+    const limitVal = document.getElementById('editCardLimit').value;
+    const cardLimit = limitVal === '' ? null : parseInt(limitVal);
+    try {
+      await fetch(`/api/admin/users/${id}/permissions`, {
+        method:'POST', headers:{'Content-Type':'application/json','x-admin-token':TOKEN},
+        body: JSON.stringify({ can_create: perms.Create, can_edit: perms.Edit, can_delete: perms.Delete, card_limit: cardLimit })
+      });
+      closeModal('editUserModal');
+      showAlert('usersAlert', 'Zapisano uprawnienia');
+      loadUsers(); loadKeys();
+    } catch(e) { showAlert('usersAlert','Błąd','error'); }
+  }
+
+  async function resetUserPassword() {
+    const id = document.getElementById('editUserId').value;
+    const pw = prompt('Nowe hasło (min. 6 znaków):');
+    if (!pw || pw.length < 6) { alert('Hasło za krótkie.'); return; }
+    const r = await fetch(`/api/admin/users/${id}/reset-password`, {
+      method:'POST', headers:{'Content-Type':'application/json','x-admin-token':TOKEN},
+      body: JSON.stringify({ password: pw })
+    });
+    const d = await r.json();
+    if (d.ok) showAlert('usersAlert','Hasło zmienione');
+    else showAlert('usersAlert', d.error||'Błąd','error');
+  }
+
+  async function deleteUser(id, username) {
+    if(!confirm(`Na pewno usunąć użytkownika "${username}"?\nWszystkie jego karty zostaną usunięte.`)) return;
+    await fetch(`/api/admin/users/${id}`,{method:'DELETE',headers:{'x-admin-token':TOKEN}});
+    showAlert('usersAlert','Użytkownik usunięty');
+    loadUsers(); loadKeys();
   }
 
   // ─── Commands ─────────────────────────────────────────────────────────────
@@ -494,21 +608,16 @@
 
   function renderCommands(cmds) {
     const tbody = document.getElementById('commandsBody');
-    if (!cmds.length) {
-      tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:24px">Brak komend</td></tr>';
-      return;
-    }
+    if (!cmds.length) { tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:24px">Brak komend</td></tr>'; return; }
     tbody.innerHTML = cmds.map(c => `
       <tr>
-        <td><code style="color:var(--accent)">${escHtml(c.cmd)}</code></td>
-        <td>${escHtml(c.label)}</td>
-        <td><div class="resp-preview">${escHtml(c.response)}</div></td>
-        <td>${c.active
-          ? '<span class="badge badge-green">Aktywna</span>'
-          : '<span class="badge badge-red">Wyłączona</span>'}</td>
+        <td><code style="color:var(--accent)">${esc(c.cmd)}</code></td>
+        <td>${esc(c.label)}</td>
+        <td><div class="resp-preview">${esc(c.response)}</div></td>
+        <td>${c.active ? '<span class="badge badge-green">Aktywna</span>' : '<span class="badge badge-red">Wyłączona</span>'}</td>
         <td><div class="actions">
-          <button class="btn btn-ghost btn-sm" onclick="openEditModal(${c.id}, ${JSON.stringify(c.label)}, ${JSON.stringify(c.response)})">Edytuj</button>
-          <button class="btn btn-ghost btn-sm" onclick="toggleCommand(${c.id}, ${!c.active})">${c.active ? 'Wyłącz' : 'Włącz'}</button>
+          <button class="btn btn-ghost btn-sm" onclick="openEditCmd(${c.id},${JSON.stringify(c.label)},${JSON.stringify(c.response)})">Edytuj</button>
+          <button class="btn btn-ghost btn-sm" onclick="toggleCommand(${c.id},${!c.active})">${c.active?'Wyłącz':'Włącz'}</button>
           <button class="btn btn-danger btn-sm" onclick="deleteCommand(${c.id})">Usuń</button>
         </div></td>
       </tr>
@@ -519,94 +628,53 @@
     const cmd = document.getElementById('cmdName').value.trim();
     const label = document.getElementById('cmdLabel').value.trim();
     const response = document.getElementById('cmdResponse').value.trim();
-    if (!cmd || !label || !response) { showAlert('cmdAlert','Wypełnij wszystkie pola','error'); return; }
+    if(!cmd||!label||!response){showAlert('cmdAlert','Wypełnij wszystkie pola','error');return;}
     try {
-      const r = await fetch('/api/admin/commands', {
-        method:'POST',
-        headers:{'Content-Type':'application/json','x-admin-token':TOKEN},
-        body: JSON.stringify({ cmd, label, response })
-      });
+      const r = await fetch('/api/admin/commands',{method:'POST',headers:{'Content-Type':'application/json','x-admin-token':TOKEN},body:JSON.stringify({cmd,label,response})});
       const d = await r.json();
-      if (!r.ok) { showAlert('cmdAlert', d.error||'Błąd','error'); return; }
+      if(!r.ok){showAlert('cmdAlert',d.error||'Błąd','error');return;}
       showAlert('cmdAlert','Komenda dodana');
-      document.getElementById('cmdName').value='';
-      document.getElementById('cmdLabel').value='';
-      document.getElementById('cmdResponse').value='';
+      document.getElementById('cmdName').value='';document.getElementById('cmdLabel').value='';document.getElementById('cmdResponse').value='';
       loadCommands();
-    } catch(e) { showAlert('cmdAlert','Błąd połączenia','error'); }
+    } catch(e){showAlert('cmdAlert','Błąd połączenia','error');}
   }
 
-  function openEditModal(id, label, response) {
-    document.getElementById('editCmdId').value = id;
-    document.getElementById('editCmdLabel').value = label;
-    document.getElementById('editCmdResponse').value = response;
-    document.getElementById('editCmdModal').style.display = 'flex';
+  function openEditCmd(id,label,response){
+    document.getElementById('editCmdId').value=id;
+    document.getElementById('editCmdLabel').value=label;
+    document.getElementById('editCmdResponse').value=response;
+    document.getElementById('editCmdModal').classList.add('open');
   }
-  function closeEditModal() {
-    document.getElementById('editCmdModal').style.display = 'none';
+  async function saveEditCommand(){
+    const id=document.getElementById('editCmdId').value;
+    const label=document.getElementById('editCmdLabel').value.trim();
+    const response=document.getElementById('editCmdResponse').value.trim();
+    await fetch(`/api/admin/commands/${id}`,{method:'PUT',headers:{'Content-Type':'application/json','x-admin-token':TOKEN},body:JSON.stringify({label,response})});
+    closeModal('editCmdModal');showAlert('cmdAlert','Zapisano');loadCommands();
   }
-  async function saveEditCommand() {
-    const id = document.getElementById('editCmdId').value;
-    const label = document.getElementById('editCmdLabel').value.trim();
-    const response = document.getElementById('editCmdResponse').value.trim();
-    await fetch(`/api/admin/commands/${id}`, {
-      method:'PUT',
-      headers:{'Content-Type':'application/json','x-admin-token':TOKEN},
-      body: JSON.stringify({ label, response })
-    });
-    closeEditModal();
-    showAlert('cmdAlert','Zapisano');
+  async function toggleCommand(id,active){
+    await fetch(`/api/admin/commands/${id}`,{method:'PUT',headers:{'Content-Type':'application/json','x-admin-token':TOKEN},body:JSON.stringify({active})});
     loadCommands();
   }
-  async function toggleCommand(id, active) {
-    await fetch(`/api/admin/commands/${id}`, {
-      method:'PUT',
-      headers:{'Content-Type':'application/json','x-admin-token':TOKEN},
-      body: JSON.stringify({ active })
-    });
-    loadCommands();
-  }
-  async function deleteCommand(id) {
-    if (!confirm('Na pewno usunąć komendę?')) return;
-    await fetch(`/api/admin/commands/${id}`, { method:'DELETE', headers:{'x-admin-token':TOKEN} });
+  async function deleteCommand(id){
+    if(!confirm('Na pewno usunąć komendę?')) return;
+    await fetch(`/api/admin/commands/${id}`,{method:'DELETE',headers:{'x-admin-token':TOKEN}});
     loadCommands();
   }
 
   // ─── Util ─────────────────────────────────────────────────────────────────
-  function escHtml(t) {
-    return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-  }
   function copyText(text, btn) {
     navigator.clipboard.writeText(text).then(() => {
       const orig = btn.textContent;
-      btn.textContent = '✓ Skopiowano!';
+      btn.textContent = '✓';
       setTimeout(() => btn.textContent = orig, 2000);
     });
   }
 
-  // ─── Edit key modal ───────────────────────────────────────────────────────
-  function editKey(id, username, note) {
-    const un = prompt('Nazwa użytkownika:', username);
-    if (un === null) return;
-    fetch(`/api/admin/keys/${id}`, {
-      method: 'PUT',
-      headers: {'Content-Type':'application/json','x-admin-token':TOKEN},
-      body: JSON.stringify({ username: un || null, note: note || null })
-    }).then(() => { showAlert('keysAlert','Zapisano'); loadKeys(); });
-  }
-
-  function resetPassword(id) {
-    const pw = prompt('Nowe hasło (min. 6 znaków):');
-    if (!pw || pw.length < 6) { alert('Hasło za krótkie.'); return; }
-    fetch(`/api/admin/keys/${id}/reset-password`, {
-      method: 'POST',
-      headers: {'Content-Type':'application/json','x-admin-token':TOKEN},
-      body: JSON.stringify({ password: pw })
-    }).then(r => r.json()).then(d => {
-      if (d.ok) showAlert('keysAlert','Hasło zmienione');
-      else showAlert('keysAlert', d.error || 'Błąd', 'error');
-    });
-  }
+  // Zamknij modal klikając tło
+  document.querySelectorAll('.modal-bg').forEach(bg => {
+    bg.addEventListener('click', e => { if(e.target===bg) bg.classList.remove('open'); });
+  });
 </script>
 </body>
 </html>

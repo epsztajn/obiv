@@ -1,299 +1,512 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="pl">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <script src="js/theme-init.js"></script>
-    <title>Start</title>
-    <style>
-      :root {
-        color-scheme: light;
-        --bg: linear-gradient(135deg, #eef2ff, #f8fafc 60%, #e2e8f0);
-        --card: #ffffff;
-        --text: #0f172a;
-        --muted: #475569;
-        --shadow: 0 18px 40px rgba(15, 23, 42, 0.12);
-        --spinner-track: #cbd5f5;
-        --spinner: #4338ca;
-        --border: #cbd5e1;
-      }
-      :root[data-theme="dark"] {
-        color-scheme: dark;
-        --bg: linear-gradient(135deg, #0b1220, #111827 60%, #0f172a);
-        --card: #0f172a;
-        --text: #e2e8f0;
-        --muted: #94a3b8;
-        --shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
-        --spinner-track: #1e293b;
-        --spinner: #60a5fa;
-        --border: #1e293b;
-      }
-      body {
-        margin: 0;
-        min-height: 100vh;
-        display: grid;
-        place-items: center;
-        background: var(--bg);
-        font-family: "Roboto", "Segoe UI", Arial, sans-serif;
-        color: var(--text);
-      }
-      .card {
-        width: min(92vw, 420px);
-        background: var(--card);
-        border-radius: 16px;
-        padding: 28px;
-        box-shadow: var(--shadow);
-        text-align: center;
-      }
-      .title {
-        margin: 0 0 8px;
-        font-size: 22px;
-        font-weight: 700;
-      }
-      .status {
-        margin: 0;
-        font-size: 15px;
-        color: var(--muted);
-      }
-      .spinner {
-        margin: 16px auto 0;
-        width: 28px;
-        height: 28px;
-        border-radius: 50%;
-        border: 3px solid var(--spinner-track);
-        border-top-color: var(--spinner);
-        animation: spin 0.8s linear infinite;
-      }
-      .theme-toggle {
-        position: fixed;
-        top: 16px;
-        right: 16px;
-        padding: 8px 12px;
-        border-radius: 999px;
-        border: 1px solid var(--border);
-        background: var(--card);
-        color: var(--text);
-        font-size: 12px;
-        font-weight: 700;
-        cursor: pointer;
-      }
-      @keyframes spin {
-        to {
-          transform: rotate(360deg);
-        }
-      }
-    </style>
-    <link rel="manifest" href="manifest.json" />
-    <link rel="stylesheet" href="css/guard.css" />
-    <script src="js/guard.js" defer></script>
-    <script src="js/theme.js" defer></script>
-  </head>
-  <body>
-    <div id="jsGuard" class="guard-overlay" role="status" aria-live="polite" hidden>
-      <div class="guard-card"></div>
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <script src="js/theme-init.js"></script>
+  <title>Moje karty</title>
+  <style>
+    :root{color-scheme:light;--bg:linear-gradient(135deg,#eef2ff,#f8fafc 60%,#e2e8f0);--card:#fff;--text:#0f172a;--muted:#475569;--border:#cbd5e1;--primary:#4338ca;--primary-soft:rgba(67,56,202,.12);--danger:#ef4444;--danger-soft:rgba(239,68,68,.1);--success:#22c55e;--success-soft:rgba(34,197,94,.1);--shadow:0 8px 32px rgba(15,23,42,.1);--input-bg:#f8fafc}
+    :root[data-theme="dark"]{color-scheme:dark;--bg:linear-gradient(135deg,#0b1220,#111827 60%,#0f172a);--card:#0f172a;--text:#e2e8f0;--muted:#94a3b8;--border:#1e293b;--primary:#60a5fa;--primary-soft:rgba(96,165,250,.12);--danger:#f87171;--danger-soft:rgba(248,113,113,.1);--success:#4ade80;--success-soft:rgba(74,222,128,.1);--shadow:0 8px 32px rgba(0,0,0,.4);--input-bg:#0f172a}
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    body{min-height:100vh;background:var(--bg);font-family:"Roboto","Segoe UI",Arial,sans-serif;color:var(--text);padding-bottom:40px}
+
+    /* Topbar */
+    .topbar{background:var(--card);border-bottom:1px solid var(--border);padding:14px 20px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:100;box-shadow:var(--shadow)}
+    .topbar-title{font-size:17px;font-weight:700;flex:1}
+    .topbar-user{font-size:13px;color:var(--muted)}
+    .btn-logout{background:none;border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:6px 12px;cursor:pointer;font-size:13px;transition:all .2s}
+    .btn-logout:hover{border-color:var(--danger);color:var(--danger)}
+    .theme-toggle{width:36px;height:36px;border-radius:50%;border:1px solid var(--border);background:var(--card);color:var(--text);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+
+    /* Container */
+    .container{max-width:640px;margin:0 auto;padding:24px 16px}
+
+    /* Section headers */
+    .section-title{font-size:14px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;margin-top:28px}
+    .section-title:first-child{margin-top:0}
+
+    /* Card list */
+    .card-item{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:10px;display:flex;align-items:center;gap:14px;box-shadow:var(--shadow)}
+    .card-avatar{width:44px;height:44px;border-radius:50%;background:var(--primary-soft);color:var(--primary);font-weight:700;font-size:16px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+    .card-info{flex:1;min-width:0}
+    .card-name{font-weight:600;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .card-meta{font-size:12px;color:var(--muted);margin-top:2px}
+    .card-actions{display:flex;gap:6px;flex-shrink:0}
+    .btn-icon{width:34px;height:34px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:center;transition:all .2s}
+    .btn-icon:hover{border-color:var(--primary);color:var(--primary)}
+    .btn-icon.del:hover{border-color:var(--danger);color:var(--danger)}
+    .empty-state{text-align:center;padding:32px 16px;color:var(--muted);font-size:14px}
+
+    /* Limit bar */
+    .limit-info{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px 16px;margin-bottom:16px;font-size:13px;color:var(--muted);display:flex;align-items:center;gap:8px}
+    .limit-info.warn{border-color:var(--danger);color:var(--danger);background:var(--danger-soft)}
+
+    /* Form card */
+    .form-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:22px;box-shadow:var(--shadow)}
+    .form-title{font-size:16px;font-weight:700;margin-bottom:20px}
+    label{font-size:13px;font-weight:600;display:block;margin-bottom:5px;color:var(--muted)}
+    input[type=text],input[type=date],select{width:100%;padding:10px 13px;font-size:15px;border-radius:10px;border:1px solid var(--border);outline:none;background:var(--input-bg);color:var(--text);transition:border .2s,box-shadow .2s;margin-bottom:14px}
+    input:focus,select:focus{border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-soft)}
+    .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+    .field{margin-bottom:14px}
+    .field input,.field select{margin-bottom:0}
+
+    /* Date selects */
+    .date-row{display:grid;grid-template-columns:2fr 2fr 3fr;gap:8px;margin-bottom:14px}
+    .date-row select{margin-bottom:0}
+
+    /* Photo upload */
+    .photo-area{border:2px dashed var(--border);border-radius:12px;padding:20px;text-align:center;cursor:pointer;transition:border-color .2s;margin-bottom:14px;position:relative}
+    .photo-area:hover,.photo-area.dragover{border-color:var(--primary)}
+    .photo-area input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+    .photo-preview{width:80px;height:80px;border-radius:50%;object-fit:cover;margin:0 auto 8px;display:block}
+    .photo-text{font-size:13px;color:var(--muted)}
+
+    /* Buttons */
+    .btn{padding:11px 20px;font-size:15px;font-weight:700;border-radius:999px;border:none;cursor:pointer;transition:opacity .2s,transform .15s}
+    .btn:hover{opacity:.9;transform:translateY(-1px)}
+    .btn:disabled{opacity:.45;cursor:default;transform:none}
+    .btn-primary{background:var(--primary);color:#fff;width:100%}
+    .btn-ghost{background:transparent;border:1px solid var(--border);color:var(--text)}
+
+    /* Link result */
+    .link-result{background:var(--success-soft);border:1px solid var(--success);border-radius:12px;padding:16px;margin-top:16px}
+    .link-result p{font-size:13px;color:var(--muted);margin-bottom:8px}
+    .link-box{display:flex;gap:8px;align-items:center}
+    .link-box input{flex:1;font-size:13px;padding:8px 12px;border-radius:8px;border:1px solid var(--border);background:var(--input-bg);color:var(--text);margin-bottom:0}
+    .btn-copy{padding:8px 14px;font-size:13px;font-weight:600;border-radius:8px;border:none;background:var(--primary);color:#fff;cursor:pointer;white-space:nowrap}
+
+    /* Msg */
+    .msg{margin-top:10px;font-size:13px;padding:10px 14px;border-radius:8px}
+    .msg.err{background:var(--danger-soft);color:var(--danger)}
+    .msg.ok{background:var(--success-soft);color:var(--success)}
+
+    /* Loading */
+    .spinner{display:inline-block;width:18px;height:18px;border-radius:50%;border:2px solid var(--border);border-top-color:var(--primary);animation:spin .7s linear infinite;vertical-align:middle;margin-right:6px}
+    @keyframes spin{to{transform:rotate(360deg)}}
+
+    @media(max-width:480px){
+      .row2{grid-template-columns:1fr}
+      .card-actions{gap:4px}
+      .btn-icon{width:30px;height:30px;font-size:13px}
+    }
+  </style>
+</head>
+<body>
+
+<div class="topbar">
+  <span class="topbar-title">🪪 sObywatel</span>
+  <span class="topbar-user" id="topbarUser"></span>
+  <button class="theme-toggle" id="themeToggle">☀️</button>
+  <button class="btn-logout" onclick="doLogout()">Wyloguj</button>
+</div>
+
+<div class="container">
+
+  <!-- Lista kart -->
+  <div class="section-title">Twoje karty</div>
+  <div id="limitInfo"></div>
+  <div id="cardsList"><div class="empty-state"><span class="spinner"></span> Ładowanie...</div></div>
+
+  <!-- Formularz nowej / edytowanej karty -->
+  <div class="section-title" id="formTitle">Nowa karta</div>
+  <div class="form-card" id="formCard">
+    <input type="hidden" id="editId"/>
+    <div class="row2">
+      <div class="field">
+        <label>Imię</label>
+        <input type="text" id="fFirstName" placeholder="Jan" maxlength="50"/>
+      </div>
+      <div class="field">
+        <label>Nazwisko</label>
+        <input type="text" id="fLastName" placeholder="Kowalski" maxlength="50"/>
+      </div>
     </div>
-    <button id="themeToggle" class="theme-toggle" type="button" aria-pressed="false">
-      Tryb: Jasny
-    </button>
-    <main class="card">
-      <h1 class="title">Start aplikacji</h1>
-      <p id="status" class="status">Sprawdzanie dostepu...</p>
-      <div class="spinner" aria-hidden="true"></div>
-    </main>
+    <div class="field">
+      <label>PESEL</label>
+      <input type="text" id="fPesel" placeholder="00000000000" maxlength="11" inputmode="numeric"/>
+    </div>
+    <div class="field">
+      <label>Data urodzenia</label>
+      <div class="date-row">
+        <select id="fBirthDay">
+          <option value="">Dzień</option>
+          <script>for(let i=1;i<=31;i++)document.write(`<option value="${String(i).padStart(2,'0')}">${String(i).padStart(2,'0')}</option>`)</script>
+        </select>
+        <select id="fBirthMonth">
+          <option value="">Miesiąc</option>
+          <option value="01">Styczeń</option><option value="02">Luty</option>
+          <option value="03">Marzec</option><option value="04">Kwiecień</option>
+          <option value="05">Maj</option><option value="06">Czerwiec</option>
+          <option value="07">Lipiec</option><option value="08">Sierpień</option>
+          <option value="09">Wrzesień</option><option value="10">Październik</option>
+          <option value="11">Listopad</option><option value="12">Grudzień</option>
+        </select>
+        <select id="fBirthYear">
+          <option value="">Rok</option>
+          <script>for(let y=new Date().getFullYear();y>=1900;y--)document.write(`<option value="${y}">${y}</option>`)</script>
+        </select>
+      </div>
+    </div>
+    <div class="field">
+      <label>Płeć</label>
+      <select id="fGender" style="margin-bottom:0">
+        <option value="">Wybierz</option>
+        <option value="M">Mężczyzna</option>
+        <option value="K">Kobieta</option>
+      </select>
+    </div>
+    <div class="field" style="margin-top:14px">
+      <label>Zdjęcie</label>
+      <div class="photo-area" id="photoArea">
+        <input type="file" id="fPhoto" accept="image/*" onchange="handlePhoto(this)"/>
+        <img id="photoPreview" class="photo-preview" src="" alt="" style="display:none"/>
+        <div class="photo-text" id="photoText">📷 Kliknij lub przeciągnij zdjęcie</div>
+      </div>
+    </div>
+    <div id="formMsg"></div>
+    <button class="btn btn-primary" id="submitBtn" onclick="submitCard()">Zatwierdź</button>
+    <div id="cancelEditWrap" style="display:none;margin-top:10px">
+      <button class="btn btn-ghost" style="width:100%" onclick="cancelEdit()">Anuluj edycję</button>
+    </div>
+    <div id="linkResult" style="display:none" class="link-result">
+      <p>✅ Karta utworzona! Skopiuj link poniżej i wyślij użytkownikowi:</p>
+      <div class="link-box">
+        <input type="text" id="linkInput" readonly/>
+        <button class="btn-copy" onclick="copyLink()">📋 Kopiuj</button>
+      </div>
+    </div>
+  </div>
 
-    <script>
-      const DB_NAME = "access-control";
-      const STORE_NAME = "auth";
-      const DEVICE_KEY = "device-id";
-      const CLIENT_LIMITS = {
-        "POST /api/validate": { windowMs: 60 * 1000, max: 10 },
-        default: { windowMs: 60 * 1000, max: 30 },
+</div>
+
+<script>
+  const SESSION_KEY = 'session';
+
+  // ─── Theme ──────────────────────────────────────────────────────────────────
+  const tt = document.getElementById('themeToggle');
+  function getTheme(){ return document.documentElement.getAttribute('data-theme')==='dark'?'dark':'light' }
+  function updateTT(){ tt.textContent = getTheme()==='dark'?'🌙':'☀️' }
+  tt.addEventListener('click', () => {
+    const n = getTheme()==='dark'?'light':'dark';
+    document.documentElement.setAttribute('data-theme', n);
+    try{ localStorage.setItem('theme-preference', n) }catch(_){}
+    updateTT();
+  });
+  updateTT();
+
+  // ─── Auth guard ─────────────────────────────────────────────────────────────
+  const session = localStorage.getItem(SESSION_KEY);
+  if (!session) {
+    window.location.replace('/zaloguj.html');
+  } else {
+    fetch('/api/session/validate', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ session })
+    }).then(r=>r.json()).then(d=>{
+      if (!d.valid) {
+        localStorage.removeItem(SESSION_KEY);
+        window.location.replace('/zaloguj.html');
+      }
+    }).catch(()=>{ window.location.replace('/zaloguj.html') });
+  }
+
+  // ─── State ──────────────────────────────────────────────────────────────────
+  let userInfo = {};
+  let cards = [];
+
+  // ─── Init ───────────────────────────────────────────────────────────────────
+  async function init() {
+    try {
+      const [meRes, cardsRes] = await Promise.all([
+        fetch('/api/me', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ session }) }),
+        fetch('/api/cards', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ session }) })
+      ]);
+      userInfo = await meRes.json();
+      const cardsData = await cardsRes.json();
+      cards = cardsData.cards || [];
+
+      document.getElementById('topbarUser').textContent = userInfo.username || '';
+      renderCards();
+      updateFormVisibility();
+    } catch(e) {
+      document.getElementById('cardsList').innerHTML = '<div class="empty-state" style="color:var(--danger)">Błąd ładowania danych.</div>';
+    }
+  }
+
+  function renderCards() {
+    const el = document.getElementById('cardsList');
+    const limitEl = document.getElementById('limitInfo');
+
+    // Limit info
+    if (userInfo.cardLimit !== null && userInfo.cardLimit !== undefined) {
+      const remaining = userInfo.cardLimit - cards.length;
+      const warn = remaining <= 0;
+      limitEl.innerHTML = `<div class="limit-info ${warn?'warn':''}">
+        ${warn ? '🚫' : 'ℹ️'} Karty: <strong>${cards.length}/${userInfo.cardLimit}</strong>${warn?' — osiągnięto limit':''}
+      </div>`;
+    } else {
+      limitEl.innerHTML = '';
+    }
+
+    if (!cards.length) {
+      el.innerHTML = '<div class="empty-state">Nie masz jeszcze żadnych kart.<br>Utwórz pierwszą poniżej.</div>';
+      return;
+    }
+
+    el.innerHTML = cards.map(c => {
+      const firstName = c.first_name ? JSON.parse(c.first_name) : '?';
+      const lastName = c.last_name ? JSON.parse(c.last_name) : '?';
+      const initials = (firstName[0]||'') + (lastName[0]||'');
+      const bd = c.birth_day && c.birth_month && c.birth_year
+        ? `${JSON.parse(c.birth_day)}.${JSON.parse(c.birth_month)}.${JSON.parse(c.birth_year)}`
+        : '';
+
+      const editBtn = userInfo.canEdit !== false
+        ? `<button class="btn-icon" onclick="editCard(${c.id})" title="Edytuj">✏️</button>` : '';
+      const delBtn = userInfo.canDelete !== false
+        ? `<button class="btn-icon del" onclick="deleteCard(${c.id})" title="Usuń">🗑️</button>` : '';
+
+      return `<div class="card-item">
+        <div class="card-avatar">${initials.toUpperCase()}</div>
+        <div class="card-info">
+          <div class="card-name">${esc(firstName)} ${esc(lastName)}</div>
+          <div class="card-meta">${bd ? 'ur. '+bd : ''}</div>
+        </div>
+        <div class="card-actions">
+          <button class="btn-icon" onclick="copyCardLink('${c.card_token}')" title="Kopiuj link">📋</button>
+          ${editBtn}
+          ${delBtn}
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  function updateFormVisibility() {
+    const formCard = document.getElementById('formCard');
+    const atLimit = userInfo.cardLimit !== null && userInfo.cardLimit !== undefined && cards.length >= userInfo.cardLimit;
+    const canCreate = userInfo.canCreate !== false;
+    if (atLimit || !canCreate) {
+      document.getElementById('submitBtn').disabled = true;
+      document.getElementById('submitBtn').textContent = atLimit ? 'Osiągnięto limit kart' : 'Brak uprawnień do tworzenia';
+    } else {
+      document.getElementById('submitBtn').disabled = false;
+      document.getElementById('submitBtn').textContent = 'Zatwierdź';
+    }
+  }
+
+  // ─── Photo ──────────────────────────────────────────────────────────────────
+  let photoBase64 = null;
+
+  function handlePhoto(input) {
+    const file = input.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      // Kompresuj zdjęcie
+      const img = new Image();
+      img.onload = function() {
+        const canvas = document.createElement('canvas');
+        const MAX = 400;
+        let w = img.width, h = img.height;
+        if (w > h) { if(w>MAX){h=h*MAX/w;w=MAX} } else { if(h>MAX){w=w*MAX/h;h=MAX} }
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        photoBase64 = canvas.toDataURL('image/jpeg', 0.75);
+        document.getElementById('photoPreview').src = photoBase64;
+        document.getElementById('photoPreview').style.display = 'block';
+        document.getElementById('photoText').textContent = '✅ Zdjęcie dodane';
       };
-      const clientBuckets = new Map();
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  }
 
-      const themeToggle = document.getElementById("themeToggle");
+  // ─── Submit ─────────────────────────────────────────────────────────────────
+  async function submitCard() {
+    const editId = document.getElementById('editId').value;
+    const firstName = document.getElementById('fFirstName').value.trim();
+    const lastName  = document.getElementById('fLastName').value.trim();
+    const pesel     = document.getElementById('fPesel').value.trim();
+    const birthDay  = document.getElementById('fBirthDay').value;
+    const birthMonth= document.getElementById('fBirthMonth').value;
+    const birthYear = document.getElementById('fBirthYear').value;
+    const gender    = document.getElementById('fGender').value;
 
-      function getCurrentTheme() {
-        return document.documentElement.getAttribute("data-theme") === "dark" ? "dark" : "light";
+    if (!firstName || !lastName || !pesel || !birthDay || !birthMonth || !birthYear || !gender) {
+      showMsg('Wypełnij wszystkie pola.', 'err'); return;
+    }
+    if (!/^\d{11}$/.test(pesel)) {
+      showMsg('PESEL musi mieć dokładnie 11 cyfr.', 'err'); return;
+    }
+
+    const data = { firstName, lastName, pesel, birthDay, birthMonth, birthYear, gender };
+    if (photoBase64) data.photo = photoBase64;
+
+    const btn = document.getElementById('submitBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span> Zapisuję...';
+
+    try {
+      const body = { session, data };
+      if (editId) body.id = parseInt(editId);
+      const r = await fetch('/api/submit', {
+        method: 'POST', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify(body)
+      });
+      const d = await r.json();
+      if (!r.ok || !d.ok) {
+        const msgs = { NO_PERMISSION:'Brak uprawnień.', CARD_LIMIT_REACHED:'Osiągnięto limit kart.', SERVER_ERROR:'Błąd serwera.' };
+        showMsg(msgs[d.error] || 'Błąd.', 'err');
+        return;
       }
 
-      function applyTheme(mode) {
-        if (window.Theme && typeof window.Theme.setMode === "function") {
-          window.Theme.setMode(mode);
-        } else {
-          try {
-            document.documentElement.setAttribute("data-theme", mode);
-            localStorage.setItem("theme-preference", mode);
-          } catch (_) {}
-        }
-        updateThemeToggle();
-      }
-
-      function updateThemeToggle() {
-        const mode = getCurrentTheme();
-        if(themeToggle) {
-            themeToggle.textContent = mode === "dark" ? "Tryb: Ciemny" : "Tryb: Jasny";
-            themeToggle.setAttribute("aria-pressed", mode === "dark");
-        }
-      }
-
-      function normalizeRatePath(pathname) {
-        return pathname.replace(/\/\d+(?=\/|$)/g, "/:id");
-      }
-
-      function checkClientRateLimit(path, method) {
-        const normalized = normalizeRatePath(path);
-        const key = `${method} ${normalized}`;
-        const config = CLIENT_LIMITS[key] || CLIENT_LIMITS.default;
-        const now = Date.now();
-        let bucket = clientBuckets.get(key);
-        if (!bucket || now > bucket.resetAt) {
-          bucket = { count: 0, resetAt: now + config.windowMs };
-          clientBuckets.set(key, bucket);
-        }
-        if (bucket.count >= config.max) {
-          return false;
-        }
-        bucket.count += 1;
-        return true;
-      }
-
-      function createDeviceId() {
-        if (window.crypto && window.crypto.getRandomValues) {
-          const bytes = new Uint8Array(16);
-          window.crypto.getRandomValues(bytes);
-          return Array.from(bytes).map((b) => b.toString(16).padStart(2, "0")).join("");
-        }
-        return `${Date.now().toString(16)}${Math.random().toString(16).slice(2, 10)}`;
-      }
-
-      function getDeviceId() {
-        try {
-          const stored = localStorage.getItem(DEVICE_KEY);
-          if (stored && /^[a-f0-9-]{16,64}$/i.test(stored)) {
-            return stored;
-          }
-        } catch (_) {}
-        const fresh = createDeviceId();
-        try {
-          localStorage.setItem(DEVICE_KEY, fresh);
-        } catch (_) {}
-        return fresh;
-      }
-
-      function openDb() {
-        return new Promise((resolve, reject) => {
-          const request = indexedDB.open(DB_NAME, 1);
-          request.onupgradeneeded = () => {
-            request.result.createObjectStore(STORE_NAME);
-          };
-          request.onsuccess = () => resolve(request.result);
-          request.onerror = () => reject(request.error);
-        });
-      }
-
-      async function getStoredHash() {
-        const db = await openDb();
-        return new Promise((resolve, reject) => {
-          const tx = db.transaction(STORE_NAME, "readonly");
-          const store = tx.objectStore(STORE_NAME);
-          const getReq = store.get("hash");
-          getReq.onsuccess = () => resolve(getReq.result || null);
-          getReq.onerror = () => reject(getReq.error);
-        });
-      }
-
-      async function clearStoredHash() {
-        const db = await openDb();
-        return new Promise((resolve, reject) => {
-          const tx = db.transaction(STORE_NAME, "readwrite");
-          const store = tx.objectStore(STORE_NAME);
-          const delReq = store.delete("hash");
-          delReq.onsuccess = () => resolve();
-          delReq.onerror = () => reject(delReq.error);
-        });
-      }
-
-      async function validateHash(hash) {
-        const endpoint = "/api/validate";
-        if (!checkClientRateLimit(endpoint, "POST")) {
-          throw new Error("CLIENT_RATE_LIMIT");
-        }
-        const response = await fetch(endpoint, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          credentials: "same-origin",
-          body: JSON.stringify({ hash, deviceId: getDeviceId() }),
-        });
-        let data = null;
-        try {
-          data = await response.json();
-        } catch (err) {
-          data = null;
-        }
-        if (!response.ok) {
-          if (response.status === 429) {
-            throw new Error("RATE_LIMITED");
-          }
-          if (data && data.error) {
-            throw new Error(data.error);
-          }
-          return false;
-        }
-        return data && data.valid === true;
-      }
-
-      if(themeToggle) {
-          themeToggle.addEventListener("click", () => {
-            const nextMode = getCurrentTheme() === "dark" ? "light" : "dark";
-            applyTheme(nextMode);
-          });
-      }
-
-      updateThemeToggle();
-
-      async function startAccessFlow() {
-        const statusEl = document.getElementById("status");
-        try {
-          const hash = await getStoredHash();
-          if (!hash) {
-            window.location.replace("/activate.html");
-            return;
-          }
-          statusEl.textContent = "Weryfikacja dostepu...";
-          const ok = await validateHash(hash);
-          if (ok) {
-            window.location.replace("/login.html");
-            return;
-          }
-          await clearStoredHash();
-          window.location.replace("/activate.html");
-        } catch (err) {
-          if (err && (err.message === "CLIENT_RATE_LIMIT" || err.message === "RATE_LIMITED")) {
-            statusEl.textContent = "Za duzo prob. Sprobuj pozniej.";
-            return;
-          }
-          if (err && err.message === "KEY_ALREADY_USED") {
-            statusEl.textContent = "Klucz zostal juz uzyty. Skontaktuj sie z administratorem.";
-            return;
-          }
-          statusEl.textContent = "Blad weryfikacji. Sprobuj ponownie.";
-        }
-      }
-
-      function scheduleAccessFlow() {
-        if (window.GuardApi && typeof window.GuardApi.onAccessGranted === "function") {
-          window.GuardApi.onAccessGranted(startAccessFlow);
-          return;
-        }
-        startAccessFlow();
-      }
-
-      if (document.readyState === "loading") {
-        document.addEventListener("DOMContentLoaded", scheduleAccessFlow, { once: true });
+      if (editId) {
+        showMsg('Karta zaktualizowana!', 'ok');
+        cancelEdit();
       } else {
-        scheduleAccessFlow();
+        // Pokaż link
+        const origin = window.location.origin;
+        const link = `${origin}/login.html?card_token=${d.card_token}`;
+        document.getElementById('linkInput').value = link;
+        document.getElementById('linkResult').style.display = 'block';
+        resetForm();
       }
-    </script>
-  </body>
+
+      await init(); // odśwież listę
+    } catch(e) {
+      showMsg('Błąd połączenia.', 'err');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Zatwierdź';
+    }
+  }
+
+  // ─── Edit ────────────────────────────────────────────────────────────────────
+  async function editCard(id) {
+    // Pobierz pełne dane karty
+    try {
+      const r = await fetch('/api/cards', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ session })
+      });
+      const d = await r.json();
+      const card = (d.cards || []).find(c => c.id === id);
+      // Potrzebujemy pełnych danych — pobierz przez osobny request do /get/card nie zadziała (brak tokenu)
+      // Użyjemy listy i uzupełnimy formularz tym co mamy
+      if (!card) return;
+
+      // Pobierz pełne dane z serwera przez wewnętrzny endpoint
+      const r2 = await fetch('/api/card-full', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ session, id })
+      });
+      let fullData = {};
+      if (r2.ok) fullData = (await r2.json()).data || {};
+
+      document.getElementById('editId').value = id;
+      document.getElementById('fFirstName').value = fullData.firstName || '';
+      document.getElementById('fLastName').value  = fullData.lastName  || '';
+      document.getElementById('fPesel').value     = fullData.pesel     || '';
+      document.getElementById('fBirthDay').value  = fullData.birthDay  || '';
+      document.getElementById('fBirthMonth').value= fullData.birthMonth|| '';
+      document.getElementById('fBirthYear').value = fullData.birthYear || '';
+      document.getElementById('fGender').value    = fullData.gender    || '';
+
+      if (fullData.photo) {
+        photoBase64 = fullData.photo;
+        document.getElementById('photoPreview').src = fullData.photo;
+        document.getElementById('photoPreview').style.display = 'block';
+        document.getElementById('photoText').textContent = '✅ Zdjęcie załadowane';
+      }
+
+      document.getElementById('formTitle').textContent = 'Edytuj kartę';
+      document.getElementById('cancelEditWrap').style.display = 'block';
+      document.getElementById('linkResult').style.display = 'none';
+      document.getElementById('formCard').scrollIntoView({ behavior:'smooth', block:'start' });
+    } catch(e) {
+      alert('Błąd pobierania danych karty.');
+    }
+  }
+
+  function cancelEdit() {
+    resetForm();
+    document.getElementById('editId').value = '';
+    document.getElementById('formTitle').textContent = 'Nowa karta';
+    document.getElementById('cancelEditWrap').style.display = 'none';
+  }
+
+  // ─── Delete ──────────────────────────────────────────────────────────────────
+  async function deleteCard(id) {
+    if (!confirm('Na pewno usunąć tę kartę?')) return;
+    try {
+      const r = await fetch('/api/delete-card', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ session, id })
+      });
+      const d = await r.json();
+      if (!r.ok) { alert(d.error || 'Błąd'); return; }
+      await init();
+    } catch(e) { alert('Błąd połączenia.'); }
+  }
+
+  // ─── Copy link ───────────────────────────────────────────────────────────────
+  function copyCardLink(token) {
+    const link = `${window.location.origin}/login.html?card_token=${token}`;
+    navigator.clipboard.writeText(link).then(() => {
+      showTempToast('📋 Link skopiowany!');
+    }).catch(() => prompt('Skopiuj link:', link));
+  }
+
+  function copyLink() {
+    const val = document.getElementById('linkInput').value;
+    navigator.clipboard.writeText(val).then(() => {
+      const btn = document.querySelector('.btn-copy');
+      btn.textContent = '✓ Skopiowano!';
+      setTimeout(() => btn.textContent = '📋 Kopiuj', 2000);
+    });
+  }
+
+  // ─── Logout ──────────────────────────────────────────────────────────────────
+  async function doLogout() {
+    try {
+      await fetch('/api/logout', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ session }) });
+    } catch(_) {}
+    localStorage.removeItem(SESSION_KEY);
+    window.location.replace('/zaloguj.html');
+  }
+
+  // ─── Helpers ─────────────────────────────────────────────────────────────────
+  function resetForm() {
+    ['fFirstName','fLastName','fPesel'].forEach(id => document.getElementById(id).value = '');
+    ['fBirthDay','fBirthMonth','fBirthYear','fGender'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('photoPreview').style.display = 'none';
+    document.getElementById('photoText').textContent = '📷 Kliknij lub przeciągnij zdjęcie';
+    document.getElementById('fPhoto').value = '';
+    photoBase64 = null;
+    document.getElementById('formMsg').innerHTML = '';
+  }
+
+  function showMsg(txt, type) {
+    const el = document.getElementById('formMsg');
+    el.innerHTML = `<div class="msg ${type}">${txt}</div>`;
+    setTimeout(() => el.innerHTML = '', 4000);
+  }
+
+  function showTempToast(msg) {
+    const t = document.createElement('div');
+    t.textContent = msg;
+    t.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#334155;color:#fff;padding:10px 20px;border-radius:999px;font-size:14px;z-index:9999;pointer-events:none;transition:opacity .3s';
+    document.body.appendChild(t);
+    setTimeout(() => { t.style.opacity='0'; setTimeout(()=>t.remove(),300) }, 2000);
+  }
+
+  function esc(t) { return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') }
+
+  // Start
+  if (session) init();
+</script>
+</body>
 </html>

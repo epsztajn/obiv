@@ -2,10 +2,9 @@ const express = require('express');
 const path = require('path');
 const { neon } = require('@neondatabase/serverless');
 const crypto = require('crypto');
-const nodemailer = require('nodemailer');
 
 const app = express();
-app.use(express.json());
+app.use(express.json({ limit: '5mb' }));
 app.use(express.static(path.join(__dirname, 'public')));
 
 const sql = neon(process.env.DATABASE_URL);
@@ -52,6 +51,7 @@ function generateToken() {
 
 // ─── DB init ──────────────────────────────────────────────────────────────────
 async function initDb() {
+  // Tabela kluczy
   await sql`
     CREATE TABLE IF NOT EXISTS keys (
       id SERIAL PRIMARY KEY,
@@ -64,15 +64,45 @@ async function initDb() {
       expires_at TIMESTAMPTZ,
       created_at TIMESTAMPTZ DEFAULT NOW(),
       note TEXT,
-      email TEXT,
+      username TEXT,
       password_hash TEXT,
-      username TEXT
+      can_create BOOLEAN DEFAULT TRUE,
+      can_edit BOOLEAN DEFAULT TRUE,
+      can_delete BOOLEAN DEFAULT TRUE,
+      card_limit INT DEFAULT NULL
     )
   `;
-  await sql`ALTER TABLE keys ADD COLUMN IF NOT EXISTS email TEXT`;
-  await sql`ALTER TABLE keys ADD COLUMN IF NOT EXISTS password_hash TEXT`;
+  // Migracje – dodaj kolumny jeśli ich nie ma
   await sql`ALTER TABLE keys ADD COLUMN IF NOT EXISTS username TEXT`;
+  await sql`ALTER TABLE keys ADD COLUMN IF NOT EXISTS password_hash TEXT`;
+  await sql`ALTER TABLE keys ADD COLUMN IF NOT EXISTS can_create BOOLEAN DEFAULT TRUE`;
+  await sql`ALTER TABLE keys ADD COLUMN IF NOT EXISTS can_edit BOOLEAN DEFAULT TRUE`;
+  await sql`ALTER TABLE keys ADD COLUMN IF NOT EXISTS can_delete BOOLEAN DEFAULT TRUE`;
+  await sql`ALTER TABLE keys ADD COLUMN IF NOT EXISTS card_limit INT DEFAULT NULL`;
 
+  // Tabela sesji (trwałe, 30 dni)
+  await sql`
+    CREATE TABLE IF NOT EXISTS sessions (
+      id SERIAL PRIMARY KEY,
+      token TEXT UNIQUE NOT NULL,
+      key_id INT REFERENCES keys(id) ON DELETE CASCADE,
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    )
+  `;
+
+  // Tabela kart
+  await sql`
+    CREATE TABLE IF NOT EXISTS cards (
+      id SERIAL PRIMARY KEY,
+      card_token TEXT UNIQUE NOT NULL,
+      key_id INT REFERENCES keys(id) ON DELETE CASCADE,
+      username TEXT,
+      data JSONB NOT NULL,
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    )
+  `;
+
+  // Tabela komend asystenta
   await sql`
     CREATE TABLE IF NOT EXISTS assistant_commands (
       id SERIAL PRIMARY KEY,
@@ -97,11 +127,27 @@ async function initDb() {
   console.log('DB initialized');
 }
 
+// ─── Helper: pobierz klucz z sesji ───────────────────────────────────────────
+async function getKeyFromSession(session) {
+  if (!session) return null;
+  const rows = await sql`
+    SELECT k.* FROM sessions s
+    JOIN keys k ON k.id = s.key_id
+    WHERE s.token = ${session}
+      AND s.created_at > NOW() - INTERVAL '30 days'
+    LIMIT 1
+  `;
+  if (!rows.length) return null;
+  const key = rows[0];
+  if (key.blocked) return null;
+  return key;
+}
+
 // ═══════════════════════════════════════════════════════════════════════════════
 // PUBLIC API
 // ═══════════════════════════════════════════════════════════════════════════════
 
-// POST /api/activate/check — sprawdź klucz
+// POST /api/activate/check
 app.post('/api/activate/check', async (req, res) => {
   const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'unknown';
   if (!rateLimit(`act_check:${ip}`, 5 * 60 * 1000, 10)) return res.status(429).json({ error: 'RATE_LIMITED' });
@@ -123,7 +169,7 @@ app.post('/api/activate/check', async (req, res) => {
   }
 });
 
-// POST /api/activate/complete — ustaw username + hasło, aktywuj klucz
+// POST /api/activate/complete
 app.post('/api/activate/complete', async (req, res) => {
   const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'unknown';
   if (!rateLimit(`act_complete:${ip}`, 5 * 60 * 1000, 10)) return res.status(429).json({ error: 'RATE_LIMITED' });
@@ -140,7 +186,6 @@ app.post('/api/activate/complete', async (req, res) => {
     if (key.blocked) return res.status(400).json({ error: 'KEY_BLOCKED' });
     if (key.used) return res.status(400).json({ error: 'KEY_ALREADY_USED' });
 
-    // Sprawdź czy username wolny
     const taken = await sql`SELECT id FROM keys WHERE username = ${username} LIMIT 1`;
     if (taken.length) return res.status(400).json({ error: 'USERNAME_TAKEN' });
 
@@ -179,29 +224,184 @@ app.post('/api/login', async (req, res) => {
     if (key.blocked) return res.status(401).json({ error: 'INVALID_CREDENTIALS' });
 
     const token = generateToken();
-    return res.json({ ok: true, token, keyHash: key.key_hash });
+    await sql`INSERT INTO sessions (token, key_id) VALUES (${token}, ${key.id})`;
+
+    return res.json({ ok: true, token });
   } catch (e) {
     console.error('login error:', e);
     return res.status(500).json({ error: 'SERVER_ERROR' });
   }
 });
 
-// POST /api/validate
-app.post('/api/validate', async (req, res) => {
+// POST /api/logout
+app.post('/api/logout', async (req, res) => {
+  const { session } = req.body;
+  if (session) {
+    try { await sql`DELETE FROM sessions WHERE token = ${session}`; } catch (_) {}
+  }
+  res.json({ ok: true });
+});
+
+// POST /api/session/validate
+app.post('/api/session/validate', async (req, res) => {
   const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'unknown';
-  if (!rateLimit(`validate:${ip}`, 60 * 1000, 20)) return res.status(429).json({ error: 'RATE_LIMITED' });
+  if (!rateLimit(`validate:${ip}`, 60 * 1000, 30)) return res.status(429).json({ error: 'RATE_LIMITED' });
 
-  const { hash } = req.body;
-  if (!hash) return res.status(400).json({ valid: false });
-
+  const { session } = req.body;
   try {
-    const rows = await sql`SELECT * FROM keys WHERE key_hash = ${hash} LIMIT 1`;
-    if (!rows.length) return res.json({ valid: false });
-    const key = rows[0];
-    if (key.blocked || (key.expires_at && new Date(key.expires_at) < new Date())) return res.json({ valid: false });
+    const key = await getKeyFromSession(session);
+    if (!key) return res.json({ valid: false });
     return res.json({ valid: true });
   } catch (e) {
     return res.status(500).json({ error: 'SERVER_ERROR' });
+  }
+});
+
+// POST /api/me
+app.post('/api/me', async (req, res) => {
+  const { session } = req.body;
+  try {
+    const key = await getKeyFromSession(session);
+    if (!key) return res.status(401).json({ ok: false });
+    return res.json({
+      ok: true,
+      username: key.username,
+      cardLimit: key.card_limit,
+      canCreate: key.can_create !== false,
+      canEdit: key.can_edit !== false,
+      canDelete: key.can_delete !== false
+    });
+  } catch (e) {
+    return res.status(500).json({ error: 'SERVER_ERROR' });
+  }
+});
+
+// POST /api/cards — lista kart usera
+app.post('/api/cards', async (req, res) => {
+  const { session } = req.body;
+  try {
+    const key = await getKeyFromSession(session);
+    if (!key) return res.status(401).json({ error: 'UNAUTHORIZED' });
+
+    const cards = await sql`
+      SELECT id, card_token, data->'firstName' as first_name, data->'lastName' as last_name,
+             data->'birthDay' as birth_day, data->'birthMonth' as birth_month, data->'birthYear' as birth_year,
+             created_at
+      FROM cards WHERE key_id = ${key.id} ORDER BY created_at DESC
+    `;
+    return res.json({ cards });
+  } catch (e) {
+    console.error('cards error:', e);
+    return res.status(500).json({ error: 'SERVER_ERROR' });
+  }
+});
+
+// POST /api/submit — zapisz/edytuj kartę
+app.post('/api/submit', async (req, res) => {
+  const { session, id, data } = req.body;
+  try {
+    const key = await getKeyFromSession(session);
+    if (!key) return res.status(401).json({ error: 'UNAUTHORIZED' });
+
+    if (id) {
+      // Edycja – sprawdź czy karta należy do usera
+      if (key.can_edit === false) return res.status(403).json({ error: 'NO_PERMISSION' });
+      const existing = await sql`SELECT * FROM cards WHERE id = ${id} AND key_id = ${key.id} LIMIT 1`;
+      if (!existing.length) return res.status(404).json({ error: 'NOT_FOUND' });
+
+      await sql`UPDATE cards SET data = ${data} WHERE id = ${id}`;
+      return res.json({ ok: true, card_token: existing[0].card_token });
+    } else {
+      // Nowa karta
+      if (key.can_create === false) return res.status(403).json({ error: 'NO_PERMISSION' });
+
+      // Sprawdź limit
+      if (key.card_limit !== null) {
+        const count = await sql`SELECT COUNT(*) as c FROM cards WHERE key_id = ${key.id}`;
+        if (parseInt(count[0].c) >= key.card_limit) {
+          return res.status(403).json({ error: 'CARD_LIMIT_REACHED' });
+        }
+      }
+
+      const cardToken = generateToken();
+      await sql`
+        INSERT INTO cards (card_token, key_id, username, data)
+        VALUES (${cardToken}, ${key.id}, ${key.username}, ${data})
+      `;
+      return res.json({ ok: true, card_token: cardToken });
+    }
+  } catch (e) {
+    console.error('submit error:', e);
+    return res.status(500).json({ error: 'SERVER_ERROR' });
+  }
+});
+
+// POST /api/card-full — pełne dane karty (do edycji)
+app.post('/api/card-full', async (req, res) => {
+  const { session, id } = req.body;
+  try {
+    const key = await getKeyFromSession(session);
+    if (!key) return res.status(401).json({ error: 'UNAUTHORIZED' });
+    const rows = await sql`SELECT data FROM cards WHERE id = ${id} AND key_id = ${key.id} LIMIT 1`;
+    if (!rows.length) return res.status(404).json({ error: 'NOT_FOUND' });
+    return res.json({ data: rows[0].data });
+  } catch (e) {
+    return res.status(500).json({ error: 'SERVER_ERROR' });
+  }
+});
+
+// POST /api/delete-card
+app.post('/api/delete-card', async (req, res) => {
+  const { session, id } = req.body;
+  try {
+    const key = await getKeyFromSession(session);
+    if (!key) return res.status(401).json({ error: 'UNAUTHORIZED' });
+    if (key.can_delete === false) return res.status(403).json({ error: 'NO_PERMISSION' });
+
+    await sql`DELETE FROM cards WHERE id = ${id} AND key_id = ${key.id}`;
+    return res.json({ ok: true });
+  } catch (e) {
+    return res.status(500).json({ error: 'SERVER_ERROR' });
+  }
+});
+
+// GET /get/card?card_token=xxx — dane karty bez zdjęcia (dla mObywatela)
+app.get('/get/card', async (req, res) => {
+  const { card_token } = req.query;
+  if (!card_token) return res.status(400).json({ error: 'MISSING_TOKEN' });
+  try {
+    const rows = await sql`SELECT data FROM cards WHERE card_token = ${card_token} LIMIT 1`;
+    if (!rows.length) return res.status(404).json({ error: 'NOT_FOUND' });
+    const data = { ...rows[0].data };
+    delete data.photo; // nie wysyłaj zdjęcia tutaj
+    return res.json(data);
+  } catch (e) {
+    return res.status(500).json({ error: 'SERVER_ERROR' });
+  }
+});
+
+// GET /images?card_token=xxx — zdjęcie karty
+app.get('/images', async (req, res) => {
+  const { card_token } = req.query;
+  if (!card_token) return res.status(400).end();
+  try {
+    const rows = await sql`SELECT data->>'photo' as photo FROM cards WHERE card_token = ${card_token} LIMIT 1`;
+    if (!rows.length || !rows[0].photo) return res.status(404).end();
+
+    const base64 = rows[0].photo;
+    // Obsłuż zarówno "data:image/...;base64,..." jak i samo base64
+    const match = base64.match(/^data:([^;]+);base64,(.+)$/);
+    if (match) {
+      const mimeType = match[1];
+      const buf = Buffer.from(match[2], 'base64');
+      res.set('Content-Type', mimeType);
+      return res.send(buf);
+    }
+    const buf = Buffer.from(base64, 'base64');
+    res.set('Content-Type', 'image/jpeg');
+    return res.send(buf);
+  } catch (e) {
+    return res.status(500).end();
   }
 });
 
@@ -225,9 +425,13 @@ app.post('/api/admin/login', async (req, res) => {
   res.json({ token: process.env.ADMIN_TOKEN });
 });
 
+// Klucze
 app.get('/api/admin/keys', adminAuth, async (req, res) => {
   try {
-    const rows = await sql`SELECT * FROM keys ORDER BY created_at DESC`;
+    const rows = await sql`
+      SELECT k.*, (SELECT COUNT(*) FROM cards c WHERE c.key_id = k.id) as card_count
+      FROM keys k ORDER BY k.created_at DESC
+    `;
     res.json({ keys: rows });
   } catch (e) {
     res.status(500).json({ error: 'SERVER_ERROR' });
@@ -261,22 +465,13 @@ app.post('/api/admin/keys/:id/unblock', adminAuth, async (req, res) => {
 });
 
 app.put('/api/admin/keys/:id', adminAuth, async (req, res) => {
-  const { username, note, expires_at } = req.body;
+  const { note, expires_at } = req.body;
   await sql`
     UPDATE keys SET
-      username = COALESCE(${username || null}, username),
-      note = COALESCE(${note || null}, note),
+      note = COALESCE(${note !== undefined ? note : null}, note),
       expires_at = COALESCE(${expires_at || null}, expires_at)
     WHERE id = ${req.params.id}
   `;
-  res.json({ ok: true });
-});
-
-app.post('/api/admin/keys/:id/reset-password', adminAuth, async (req, res) => {
-  const { password } = req.body;
-  if (!password || password.length < 6) return res.status(400).json({ error: 'Hasło min. 6 znaków' });
-  const pwHash = sha256(password);
-  await sql`UPDATE keys SET password_hash = ${pwHash} WHERE id = ${req.params.id}`;
   res.json({ ok: true });
 });
 
@@ -285,6 +480,73 @@ app.delete('/api/admin/keys/:id', adminAuth, async (req, res) => {
   res.json({ ok: true });
 });
 
+// Użytkownicy (admin)
+app.post('/api/admin/users', adminAuth, async (req, res) => {
+  try {
+    const rows = await sql`
+      SELECT k.id, k.username, k.blocked, k.can_create, k.can_edit, k.can_delete, k.card_limit, k.created_at,
+             (SELECT COUNT(*) FROM cards c WHERE c.key_id = k.id) as card_count
+      FROM keys k WHERE k.used = TRUE ORDER BY k.used_at DESC
+    `;
+    res.json({ users: rows });
+  } catch (e) {
+    res.status(500).json({ error: 'SERVER_ERROR' });
+  }
+});
+
+app.post('/api/admin/users/:id/permissions', adminAuth, async (req, res) => {
+  const { can_create, can_edit, can_delete, card_limit, blocked } = req.body;
+  try {
+    await sql`
+      UPDATE keys SET
+        can_create = COALESCE(${can_create !== undefined ? can_create : null}, can_create),
+        can_edit = COALESCE(${can_edit !== undefined ? can_edit : null}, can_edit),
+        can_delete = COALESCE(${can_delete !== undefined ? can_delete : null}, can_delete),
+        card_limit = ${card_limit !== undefined ? (card_limit === null ? null : parseInt(card_limit)) : sql`card_limit`},
+        blocked = COALESCE(${blocked !== undefined ? blocked : null}, blocked)
+      WHERE id = ${req.params.id}
+    `;
+    res.json({ ok: true });
+  } catch (e) {
+    res.status(500).json({ error: 'SERVER_ERROR' });
+  }
+});
+
+app.post('/api/admin/users/:id/reset-password', adminAuth, async (req, res) => {
+  const { password } = req.body;
+  if (!password || password.length < 6) return res.status(400).json({ error: 'Hasło min. 6 znaków' });
+  const pwHash = sha256(password);
+  await sql`UPDATE keys SET password_hash = ${pwHash} WHERE id = ${req.params.id}`;
+  res.json({ ok: true });
+});
+
+app.delete('/api/admin/users/:id', adminAuth, async (req, res) => {
+  // Usuń sesje i karty przez CASCADE, potem klucz
+  await sql`DELETE FROM keys WHERE id = ${req.params.id}`;
+  res.json({ ok: true });
+});
+
+// Karty (admin)
+app.post('/api/admin/cards', adminAuth, async (req, res) => {
+  try {
+    const rows = await sql`
+      SELECT c.id, c.card_token, c.username, c.created_at,
+             c.data->>'firstName' as first_name, c.data->>'lastName' as last_name,
+             c.data->>'pesel' as pesel
+      FROM cards c ORDER BY c.created_at DESC
+    `;
+    res.json({ cards: rows });
+  } catch (e) {
+    res.status(500).json({ error: 'SERVER_ERROR' });
+  }
+});
+
+app.delete('/api/admin/cards/:id', adminAuth, async (req, res) => {
+  await sql`DELETE FROM cards WHERE id = ${req.params.id}`;
+  res.json({ ok: true });
+});
+
+// Komendy (admin)
 app.get('/api/admin/commands', adminAuth, async (req, res) => {
   const rows = await sql`SELECT * FROM assistant_commands ORDER BY id`;
   res.json({ commands: rows });
@@ -305,7 +567,11 @@ app.post('/api/admin/commands', adminAuth, async (req, res) => {
 
 app.put('/api/admin/commands/:id', adminAuth, async (req, res) => {
   const { label, response, active } = req.body;
-  await sql`UPDATE assistant_commands SET label = COALESCE(${label}, label), response = COALESCE(${response}, response), active = COALESCE(${active}, active) WHERE id = ${req.params.id}`;
+  await sql`UPDATE assistant_commands SET
+    label = COALESCE(${label !== undefined ? label : null}, label),
+    response = COALESCE(${response !== undefined ? response : null}, response),
+    active = COALESCE(${active !== undefined ? active : null}, active)
+    WHERE id = ${req.params.id}`;
   res.json({ ok: true });
 });
 
